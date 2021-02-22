@@ -1,7 +1,7 @@
-pragma solidity ^0.4.0;
+pragma solidity ^0.6.0;
 
-import "./DomainBase.sol";
-import "./INameIdentityCertificate.sol";
+import "DomainBase.sol";
+import "interfaces/INameIdentityCertificate.sol";
 
 contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 

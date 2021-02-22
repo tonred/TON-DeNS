@@ -1,6 +1,6 @@
 pragma solidity ^0.6.0;
 
-import "./IDomainBase.sol";
+import "interfaces/IDomainBase.sol";
 
 import {WhoIsInfo, Records, CertificateErrors, RegistrationTypes} from "./DeNSLib.sol";
 
@@ -14,9 +14,11 @@ abstract contract DomainBase is IDomainBase {
     TvmCell certificateCode;
     TvmCell auctionCode;
 
-    address public owner;
-    uint32 public expiresAt;
+    address owner;
+    uint32 expiresAt;
     Records records;
+
+    uint registrationType;
 
 
     /*
@@ -41,6 +43,10 @@ abstract contract DomainBase is IDomainBase {
     constructor() public onlyParent {
         tvm.accept();
     }
+
+//    onBounce(TvmSlice body) external {
+//        /*...*/
+//    }
 
     /*
      *  Getters
@@ -82,13 +88,49 @@ abstract contract DomainBase is IDomainBase {
         return WhoIsInfo(absoluteDomainName, parent, owner, expiresAt, records);
     }
 
+    function getRegistrationType() view public override returns (uint){
+        return registrationType;
+    }
+
+    function getOwner() view public override returns (address){
+        return owner;
+    }
+
+    function getExpiresAt() view public override returns (uint32){
+        return expiresAt;
+    }
+
+    function getCertificateCode() view public override returns (TvmCell){
+        return certificateCode;
+    }
+
+    function getAuctionCode() view public override returns (TvmCell){
+        return auctionCode;
+    }
+
     /*
     *  Public functions
     */
 
-    function registerName(string domainName) public{
+    function registerNameByOwner (string domainName, uint8 duration) public onlyOwner{
+        require(registrationType == RegistrationTypes.OWNER_ONLY, CertificateErrors.REGISTRATION_BY_OWNER_NOT_ALLOWED);
+
     }
 
+    function registerInstantName(string domainName, uint8 duration) public {
+        require(registrationType == RegistrationTypes.INSTANT, CertificateErrors.INSTANT_REGISTRATION_NOT_ALLOWED);
+
+    }
+
+    function registerNameByAuction(string domainName, uint8 duration, uint256 bidHash) public {
+        require(registrationType == RegistrationTypes.AUCTION, CertificateErrors.REGISTRATION_BY_AUCTION_NOT_ALLOWED);
+    }
+
+
+    function checkDomainCallback() public {
+        //TODO check where from message
+
+    }
 
     /*
     *  Parent functions
@@ -110,7 +152,7 @@ abstract contract DomainBase is IDomainBase {
         owner = newOwner;
     }
 
-    function setRegistrationType(uint newRegistrationType)  public override onlyOwner{
+    function setRegistrationType(uint newRegistrationType) public override onlyOwner {
 
     }
 
@@ -137,7 +179,4 @@ abstract contract DomainBase is IDomainBase {
 
     function splitDomain(string domainName) private returns (string, string){}
 
-    //    onBounce(TvmSlice body) external {
-    //        /*...*/
-    //    }
 }

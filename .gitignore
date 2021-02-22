@@ -1,0 +1,8 @@
+.idea/
+
+build/*.tvc
+build/*.js
+build/*.sh
+build/*.result
+
+package-lock.json
