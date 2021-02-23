@@ -192,4 +192,11 @@ abstract contract DomainBase is IDomainBase {
 
     function splitDomain(string domainName) private returns (string, string){}
 
+    function _setExpiresAt(uint32 newExpiresAt) private {
+        expiresAt = newExpiresAt;
+    }
+
+    function _setOwner(address newOwner) private {
+        owner = newOwner;
+    }
 }
