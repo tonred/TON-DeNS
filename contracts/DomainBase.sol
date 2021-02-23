@@ -20,6 +20,19 @@ abstract contract DomainBase is IDomainBase {
 
     uint registrationType;
 
+    /*
+     * events 🤗
+     */
+
+    event UpdateCertificate(address indexed previousOwner, address indexed newOwner, uint32 previousExpiresAt, uint32 newExpiresAt);
+    event UpdateOwner(address indexed previousOwner, address indexed newOwner);
+    event UpdateRegistrationType(uint previousRegistrationType, uint newRegistrationType);
+    event UpdateRecordAddress(uint previousRecordAddress, uint newRecordAddress);
+    event UpdateADNLAddress(uint previousADNLAddress, uint newADNLAddress);
+
+    event RegistrationNameByOwner();
+    event RegistrationInstantName();
+    event RegistrationNameByAuction();
 
     /*
      * modifiers
