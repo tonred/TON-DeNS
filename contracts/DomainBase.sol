@@ -127,16 +127,17 @@ abstract contract DomainBase is IDomainBase {
 
     function registerNameByOwner (string domainName, uint8 duration) public onlyOwner{
         require(registrationType == RegistrationTypes.OWNER_ONLY, CertificateErrors.REGISTRATION_BY_OWNER_NOT_ALLOWED);
-
+        emit RegistrationNameByOwner();
     }
 
     function registerInstantName(string domainName, uint8 duration) public {
         require(registrationType == RegistrationTypes.INSTANT, CertificateErrors.INSTANT_REGISTRATION_NOT_ALLOWED);
-
+        emit RegistrationInstantName();
     }
 
     function registerNameByAuction(string domainName, uint8 duration, uint256 bidHash) public {
         require(registrationType == RegistrationTypes.AUCTION, CertificateErrors.REGISTRATION_BY_AUCTION_NOT_ALLOWED);
+        emit RegistrationNameByAuction();
     }
 
 
@@ -151,30 +152,41 @@ abstract contract DomainBase is IDomainBase {
 
     function updateCertificate(address newOwner, uint32 newExpiresAt) public override onlyParent {
         // TODO add checks
-        owner = newOwner;
-        expiresAt = newExpiresAt;
+        address previousOwner = owner;
+        uint32 previousExpiresAt = expiresAt;
+        _setOwner(newOwner);
+        _setExpiresAt(newExpiresAt);
+        emit UpdateCertificate(previousOwner, newOwner, previousExpiresAt, newExpiresAt);
     }
 
     /*
     *  Owner functions
     */
 
-    // TODO add checks for expiration
-
     function setOwner(address newOwner) public override onlyOwner {
-        owner = newOwner;
+        address previousOwner = newOwner;
+        _setOwner(newOwner);
+        emit UpdateOwner(previousOwner, newOwner);
     }
 
-    function setRegistrationType(uint newRegistrationType) public override onlyOwner {
+    // TODO add checks for expiration
 
+    function setRegistrationType(uint newRegistrationType) public override onlyOwner {
+        uint previousRegistrationType = registrationType;
+        registrationType = newRegistrationType;
+        emit UpdateRegistrationType(previousRegistrationType, newRegistrationType);
     }
 
     function setAddress(address newAddress) public override onlyOwner {
+        address previousAddress = records.A;
         records.A = newAddress;
+        emit UpdateRecordAddress(previousAddress, newAddress);
     }
 
     function setAdnlAddress(string newAdnlAddress) public override onlyOwner {
+        string previousAddress = records.ADNL;
         records.ADNL = newAdnlAddress;
+        emit UpdateADNLAddress(previousAddress, newAdnlAddress);
     }
 
     function addTextRecord(string newTextRecord) public override onlyOwner {
