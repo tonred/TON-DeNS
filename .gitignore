@@ -1,8 +1,9 @@
 .idea/
 
-build/*.tvc
-build/*.js
-build/*.sh
-build/*.result
+build-artifacts/*.tvc
+build-artifacts/*.js
+build-artifacts/*.sh
+build-artifacts/*.result
+build-artifacts/*.code
 
 package-lock.json
