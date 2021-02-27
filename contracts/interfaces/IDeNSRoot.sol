@@ -1,4 +1,4 @@
-pragma solidity ^0.4.0;
+pragma ton-solidity ^0.37.0;
 
 interface IDeNSRoot{
 

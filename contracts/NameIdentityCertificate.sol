@@ -1,4 +1,4 @@
-pragma solidity ^0.6.0;
+pragma ton-solidity ^0.37.0;
 
 import "DomainBase.sol";
 import "interfaces/INameIdentityCertificate.sol";

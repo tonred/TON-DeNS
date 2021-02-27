@@ -1,4 +1,5 @@
-pragma solidity ^0.4.0;
+pragma ton-solidity ^0.37.0;
+
 import 'interfaces/IDeNSRoot.sol';
 import 'DomainBase.sol';
 

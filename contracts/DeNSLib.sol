@@ -1,5 +1,4 @@
-pragma solidity >=0.6.0;
-
+pragma ton-solidity ^0.37.0;
 
 struct Records{
     address A;
