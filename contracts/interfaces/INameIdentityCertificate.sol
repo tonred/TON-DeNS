@@ -23,6 +23,8 @@ interface INameIdentityCertificate {
 
     function getExpiresAt() external view returns (uint32);
 
+    function getOwner() external view returns (address);
+
     /*  Parent functions  */
     function updateCertificate(address newOwner, uint32 newExpiresAt) external;
 

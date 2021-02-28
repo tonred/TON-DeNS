@@ -6,18 +6,30 @@ import {WhoIsInfo, Records, CertificateErrors, RegistrationTypes} from "./DeNSLi
 
 
 contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
-    address parent;
+    address static parent;
 
-    string absoluteDomainName;
-    string relativeDomainName;
+    string static absoluteDomainName;
+    string static relativeDomainName;
 
+    address owner;
     uint32 expiresAt;
     Records records;
     uint8 registrationType;
 
+    event UpdateCertificate(address indexed previousOwner, address indexed newOwner, uint32 previousExpiresAt, uint32 newExpiresAt);
+    event UpdateOwner(address indexed previousOwner, address indexed newOwner);
+    event UpdateRegistrationType(uint previousRegistrationType, uint newRegistrationType);
+    event UpdateRecordAddress(address previousRecordAddress, address newRecordAddress);
+    event UpdateADNLAddress(string previousADNLAddress, string newADNLAddress);
+
     /*
      * modifiers
      */
+
+    modifier onlyOwner {
+        require(msg.sender == owner, CertificateErrors.IS_NOT_OWNER);
+        _;
+    }
 
     modifier onlyParent {
         require(msg.sender == parent, CertificateErrors.IS_NOT_ROOT);
@@ -72,6 +84,10 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         return expiresAt;
     }
 
+    function getOwner() view public override returns (address){
+        return owner;
+    }
+
     /*
     *  Public functions
     */
@@ -97,8 +113,11 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
     function updateCertificate(address newOwner, uint32 newExpiresAt) public override onlyParent {
         // TODO add checks
-        owner = newOwner;
-        expiresAt = newExpiresAt;
+        address previousOwner = owner;
+        uint32 previousExpiresAt = expiresAt;
+        _setOwner(newOwner);
+        _setExpiresAt(newExpiresAt);
+        emit UpdateCertificate(previousOwner, newOwner, previousExpiresAt, newExpiresAt);
     }
 
     /*
@@ -108,22 +127,30 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
     // TODO add checks for expiration
 
     function setOwner(address newOwner) public override onlyOwner {
-        owner = newOwner;
+        address previousOwner = newOwner;
+        _setOwner(newOwner);
+        emit UpdateOwner(previousOwner, newOwner);
     }
 
     function setRegistrationType(uint8 newRegistrationType) public override onlyOwner {
         require(newRegistrationType == RegistrationTypes.OWNER_ONLY ||
                 newRegistrationType == RegistrationTypes.INSTANT ||
                 newRegistrationType == RegistrationTypes.AUCTION, CertificateErrors.INVALID_REGISTRATION_TYPE);
+        uint previousRegistrationType = registrationType;
         registrationType = newRegistrationType;
+        emit UpdateRegistrationType(previousRegistrationType, newRegistrationType);
     }
 
     function setAddress(address newAddress) public override onlyOwner {
+        address previousAddress = records.A;
         records.A = newAddress;
+        emit UpdateRecordAddress(previousAddress, newAddress);
     }
 
     function setAdnlAddress(string newAdnlAddress) public override onlyOwner {
+        string previousAddress = records.ADNL;
         records.ADNL = newAdnlAddress;
+        emit UpdateADNLAddress(previousAddress, newAdnlAddress);
     }
 
     function addTextRecord(string newTextRecord) public override onlyOwner {
@@ -132,6 +159,14 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
     function removeTextRecordByIndex(uint index) public override onlyOwner {
         delete records.TXT[index];
+    }
+
+   function _setExpiresAt(uint32 newExpiresAt) private {
+        expiresAt = newExpiresAt;
+    }
+
+    function _setOwner(address newOwner) private {
+        owner = newOwner;
     }
 
 }
