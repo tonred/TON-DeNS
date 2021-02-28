@@ -1,20 +1,8 @@
-# DEPENDENCIES
-SOLC_BIN = solc
-TVM_LINKER_BIN = tvm_linker
-STDLIB_PATH = stdlib_sol.tvm
-CLIENT_JS_COMPILER = tools/client_code/dist/compileClientCode.js
+include .env
 
-# PROJECT FOLDERS
-ARTIFACTS_PATH = ./build-artifacts
-CONTRACTS_PATH = ./contracts
-DEBOT_PATH = ./contracts/debot
-
-# CONTRACTS
-DNS_ROOT_CONTRACT = DeNSRoot
-DNS_NIC_CONTRACT = NameIdentityCertificate
-DNS_AUCTION_CONTRACT = DomainAuction
-DNS_DEBOT_CONTRACT = DNSDebot
-
+ifndef VERBOSE
+.SILENT:
+endif
 
 help:
 	@echo "build - compile all contracts"
@@ -50,6 +38,8 @@ build-dns-debot:
 
 build-dns-auction:
 	@echo "build-dns-auction"
+	$(call compile_all,$(DNS_AUCTION_CONTRACT))
+
 
 build-dns-test:
 	@echo "build-dns-test"
@@ -57,35 +47,45 @@ build-dns-test:
 tests:
 	@echo "tests"
 
+setup:
+	@echo "setup"
+	cp .env.dist .env
+
 clean: clean-tmp
-	@rm -f $(ARTIFACTS_PATH)/*.tvc \
-		   $(ARTIFACTS_PATH)/*.js
+	rm -f $(ARTIFACTS_PATH)/*.tvc \
+		  $(ARTIFACTS_PATH)/*.js \
+		  $(ARTIFACTS_PATH)/*.base64
 
 clean-tmp:
-	@rm -f $(ARTIFACTS_PATH)/*.sh \
-		   $(ARTIFACTS_PATH)/*.result \
-		   $(ARTIFACTS_PATH)/*.code
+	rm -f $(ARTIFACTS_PATH)/*.sh \
+		  $(ARTIFACTS_PATH)/*.result \
+		  $(ARTIFACTS_PATH)/*.code
 
 
 define compile_all
 	$(call compile_sol,$(CONTRACTS_PATH),$(1))
-	$(call compile_tvm,$(DNS_ROOT_CONTRACT))
+	$(call compile_tvm,$(1))
 	$(call compile_client_code,$(ARTIFACTS_PATH)/$(1).sol)
+	$(call tvc_to_base64,$(ARTIFACTS_PATH)/$(1))
 endef
 
 define compile_sol
 	$(SOLC_BIN) $(1)/$(2).sol
-	@mv $(1)/$(2).code $(ARTIFACTS_PATH)
-	@mv $(1)/$(2).abi.json $(ARTIFACTS_PATH)
+	mv $(1)/$(2).code $(ARTIFACTS_PATH)
+	mv $(1)/$(2).abi.json $(ARTIFACTS_PATH)
 endef
 
 define compile_tvm
 	$(TVM_LINKER_BIN) compile $(ARTIFACTS_PATH)/$(1).code \
-							  --lib $(STDLIB_PATH) \
-							  --abi-json $(ARTIFACTS_PATH)/$(1).abi.json \
-							  -o $(ARTIFACTS_PATH)/$(1).tvc
+							   --lib $(STDLIB_PATH) \
+							   --abi-json $(ARTIFACTS_PATH)/$(1).abi.json \
+							   -o $(ARTIFACTS_PATH)/$(1).tvc
 endef
 
 define compile_client_code
 	node $(CLIENT_JS_COMPILER) $(1)
+endef
+
+define tvc_to_base64
+	base64 $(1).tvc > $(1).base64
 endef

@@ -1,18 +1,22 @@
 {
-  "name": "TON-DeNS",
+  "name": "ton-dens",
   "version": "1.0.0",
   "description": "",
   "main": "deploy.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "node migration/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@tonclient/core": "^1.9.0",
+    "@tonclient/lib-node": "^1.9.0",
+    "dotenv": "^8.2.0",
     "handlebars": "^4.7.7",
-    "ton-client-node-js": "^0.27.0",
-    "ton-dev-cli": "^0.17.7"
+    "ton-client-node-js": "^0.28.0",
+    "ton-testing-suite": "github:broxus/ton-testing-suite"
   },
   "devDependencies": {
     "@babel/cli": "^7.8.4",

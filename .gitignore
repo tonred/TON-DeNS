@@ -5,5 +5,11 @@ build-artifacts/*.js
 build-artifacts/*.sh
 build-artifacts/*.result
 build-artifacts/*.code
+build-artifacts/*.base64
 
 package-lock.json
+
+.env
+migration-log.json
+
+tonos-cli.conf.json
