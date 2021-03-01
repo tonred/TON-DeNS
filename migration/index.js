@@ -2,6 +2,7 @@ require('dotenv').config({path: './.env'});
 const TONTestingSuite = require('ton-testing-suite');
 const {setupKeyPairs} = require('./utils.js');
 const {deployDeNSRoot} = require("./1_deploy_DeNSRoot");
+const {deployDeNSDebot} = require("./2_deploy_DeNSDebot");
 
 const giverConfig = {
     address: process.env.GIVER_CONTRACT,
@@ -25,6 +26,7 @@ tonWrapper._setupKeyPairs = setupKeyPairs;
     await tonWrapper.setup(10);
     const migration = new TONTestingSuite.Migration(tonWrapper);
     const DeNSRootContract = await deployDeNSRoot(tonWrapper, migration);
+    const DeNSDebotContract = await deployDeNSDebot(tonWrapper, migration);
 
     process.exit(0);
 })();

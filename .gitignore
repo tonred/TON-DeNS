@@ -6,6 +6,7 @@ build-artifacts/*.sh
 build-artifacts/*.result
 build-artifacts/*.code
 build-artifacts/*.base64
+build-artifacts/Test*.abi.json
 
 package-lock.json
 
@@ -13,3 +14,4 @@ package-lock.json
 migration-log.json
 
 tonos-cli.conf.json
+debot_err.log

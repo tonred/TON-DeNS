@@ -13,8 +13,9 @@ help:
 	@echo "tests - test contracts"
 
 
-deploy-all: deploy-contracts deploy-debot
+deploy: deploy-contracts deploy-debot
 	@echo "deploy-all"
+	node migration
 
 deploy-contracts:
 	@echo "deploy-contracts:"
@@ -27,18 +28,19 @@ build: build-dns-root build-dns-cert build-dns-debot build-dns-auction build-dns
 
 build-dns-root:
 	@echo "build-dns-root"
-	$(call compile_all,$(DNS_ROOT_CONTRACT))
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_ROOT_CONTRACT))
 
 build-dns-cert:
 	@echo "build-dns-cert"
-	$(call compile_all,$(DNS_NIC_CONTRACT))
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_NIC_CONTRACT))
 
 build-dns-debot:
 	@echo "build-dns-debot"
+	$(call compile_all,$(DEBOT_PATH),$(DNS_DEBOT_CONTRACT))
 
 build-dns-auction:
 	@echo "build-dns-auction"
-	$(call compile_all,$(DNS_AUCTION_CONTRACT))
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_AUCTION_CONTRACT))
 
 
 build-dns-test:
@@ -63,10 +65,10 @@ clean-tmp:
 
 
 define compile_all
-	$(call compile_sol,$(CONTRACTS_PATH),$(1))
-	$(call compile_tvm,$(1))
-	$(call compile_client_code,$(ARTIFACTS_PATH)/$(1).sol)
-	$(call tvc_to_base64,$(ARTIFACTS_PATH)/$(1))
+	$(call compile_sol,$(1),$(2))
+	$(call compile_tvm,$(2))
+	$(call compile_client_code,$(ARTIFACTS_PATH)/$(2).sol)
+	$(call tvc_to_base64,$(ARTIFACTS_PATH)/$(2))
 endef
 
 define compile_sol

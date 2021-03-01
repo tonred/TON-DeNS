@@ -20,8 +20,7 @@ async function deployDeNSRoot(tonWrapper, migration) {
             SMVAddress: process.env.SMV_ADDRESS
         },
         initialBalance: TONTestingSuite.utils.convertCrystal('11', 'nano'),
-        _randomNonce: false,
-        alias: 'DeNS',
+        alias: process.env.ALIAS,
     });
     return DeNSRootContract
 }
