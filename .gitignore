@@ -1,8 +1,17 @@
 .idea/
 
-build/*.tvc
-build/*.js
-build/*.sh
-build/*.result
+build-artifacts/*.tvc
+build-artifacts/*.js
+build-artifacts/*.sh
+build-artifacts/*.result
+build-artifacts/*.code
+build-artifacts/*.base64
+build-artifacts/Test*.abi.json
 
 package-lock.json
+
+.env
+migration-log.json
+
+tonos-cli.conf.json
+debot_err.log

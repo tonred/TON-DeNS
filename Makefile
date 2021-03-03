@@ -1,4 +1,8 @@
-ARTIFACTS_PATH = build-artifacts
+include .env
+
+ifndef VERBOSE
+.SILENT:
+endif
 
 help:
 	@echo "build - compile all contracts"
@@ -9,8 +13,9 @@ help:
 	@echo "tests - test contracts"
 
 
-deploy-all: deploy-contracts deploy-debot
+deploy: deploy-contracts deploy-debot
 	@echo "deploy-all"
+	node migration
 
 deploy-contracts:
 	@echo "deploy-contracts:"
@@ -23,15 +28,20 @@ build: build-dns-root build-dns-cert build-dns-debot build-dns-auction build-dns
 
 build-dns-root:
 	@echo "build-dns-root"
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_ROOT_CONTRACT))
 
 build-dns-cert:
 	@echo "build-dns-cert"
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_NIC_CONTRACT))
 
 build-dns-debot:
 	@echo "build-dns-debot"
+	$(call compile_all,$(DEBOT_PATH),$(DNS_DEBOT_CONTRACT))
 
 build-dns-auction:
 	@echo "build-dns-auction"
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_AUCTION_CONTRACT))
+
 
 build-dns-test:
 	@echo "build-dns-test"
@@ -39,7 +49,45 @@ build-dns-test:
 tests:
 	@echo "tests"
 
-clean:
-	@rm -f $(ARTIFACTS_PATH)/*.tvc $(ARTIFACTS_PATH)/*.js $(ARTIFACTS_PATH)/*.sh $(ARTIFACTS_PATH)/*.result
+setup:
+	@echo "setup"
+	cp .env.dist .env
+
+clean: clean-tmp
+	rm -f $(ARTIFACTS_PATH)/*.tvc \
+		  $(ARTIFACTS_PATH)/*.js \
+		  $(ARTIFACTS_PATH)/*.base64
+
+clean-tmp:
+	rm -f $(ARTIFACTS_PATH)/*.sh \
+		  $(ARTIFACTS_PATH)/*.result \
+		  $(ARTIFACTS_PATH)/*.code
 
 
+define compile_all
+	$(call compile_sol,$(1),$(2))
+	$(call compile_tvm,$(2))
+	$(call compile_client_code,$(ARTIFACTS_PATH)/$(2).sol)
+	$(call tvc_to_base64,$(ARTIFACTS_PATH)/$(2))
+endef
+
+define compile_sol
+	$(SOLC_BIN) $(1)/$(2).sol
+	mv $(1)/$(2).code $(ARTIFACTS_PATH)
+	mv $(1)/$(2).abi.json $(ARTIFACTS_PATH)
+endef
+
+define compile_tvm
+	$(TVM_LINKER_BIN) compile $(ARTIFACTS_PATH)/$(1).code \
+							   --lib $(STDLIB_PATH) \
+							   --abi-json $(ARTIFACTS_PATH)/$(1).abi.json \
+							   -o $(ARTIFACTS_PATH)/$(1).tvc
+endef
+
+define compile_client_code
+	node $(CLIENT_JS_COMPILER) $(1)
+endef
+
+define tvc_to_base64
+	base64 $(1).tvc > $(1).base64
+endef

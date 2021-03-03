@@ -1,5 +1,4 @@
-pragma solidity >=0.6.0;
-
+pragma ton-solidity ^0.37.0;
 
 struct Records{
     address A;
@@ -24,10 +23,11 @@ library CertificateErrors {
     uint constant INSTANT_REGISTRATION_NOT_ALLOWED = 120;
     uint constant REGISTRATION_BY_AUCTION_NOT_ALLOWED = 121;
     uint constant REGISTRATION_BY_OWNER_NOT_ALLOWED = 122;
+    uint constant INVALID_REGISTRATION_TYPE = 122;
 }
 
 library RegistrationTypes {
-    uint constant OWNER_ONLY = 0;
-    uint constant AUCTION = 1;
-    uint constant INSTANT = 2;
+    uint8 constant OWNER_ONLY = 0;
+    uint8 constant AUCTION = 1;
+    uint8 constant INSTANT = 2;
 }
