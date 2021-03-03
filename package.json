@@ -4,7 +4,7 @@
   "description": "",
   "main": "deploy.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha test --exit",
     "migrate": "node migration/index.js"
   },
   "keywords": [],
@@ -13,8 +13,11 @@
   "dependencies": {
     "@tonclient/core": "^1.9.0",
     "@tonclient/lib-node": "^1.9.0",
+    "chai": "^4.3.0",
     "dotenv": "^8.2.0",
     "handlebars": "^4.7.7",
+    "mocha": "^8.3.0",
+    "mocha-logger": "^1.0.7",
     "ton-client-node-js": "^0.28.0",
     "ton-testing-suite": "github:broxus/ton-testing-suite"
   },
