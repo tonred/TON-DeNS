@@ -1,5 +1,8 @@
 pragma ton-solidity ^0.37.0;
 
+import "./interfaces/IDomainAuction.sol";
+
+
 enum Phase {OPEN, CONFIRMATION, CLOSE}
 
 struct PhaseTime {
@@ -39,7 +42,7 @@ library AuctionErrors {
     uint constant TOKEN_VALUE_LESS_THAN_BID = 101;
 }
 
-contract Auction {
+contract Auction is IDomainAuction {
 //    uint32 constant AUCTION_CONFIRMATION_DURATION = 1 days;
     uint32 constant AUCTION_CONFIRMATION_DURATION = 30 seconds;
     uint128 constant AUCTION_DEPOSIT = 100 ton;

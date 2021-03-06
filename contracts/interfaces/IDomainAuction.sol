@@ -2,26 +2,28 @@ pragma ton-solidity ^0.37.0;
 
 interface IDomainAuction {
     /* Getters */
-    function getAddressNIC() external pure returns (address);
+    function getAddressNIC() external view returns (address);
 
-    function getRelativeDomainName() external pure returns (string);
+    function getRelativeDomainName() external view returns (string);
 
-    function getDomainRegisterDuration() external pure returns (uint32);
+    function getDomainExpiresAt() external view returns (uint32);
 
-    function getPhase() external pure returns (Phase);
+    function getPhase() external returns (Phase);
 
-    function getOpenTime() external pure returns (PhaseTime);
+    function getOpenTime() external view returns (PhaseTime);
 
-    function getConfirmationTime() external pure returns (PhaseTime);
+    function getConfirmationTime() external view returns (PhaseTime);
 
-    function getCloseTime() external pure returns (PhaseTime);
+    function getCloseTime() external view returns (PhaseTime);
+
+    function getCurrentBidsCount() external view returns (uint64);
 
     /* Bids functions */
-    function makeBid(string bidHash) external returns (string);
+    function makeBid(uint256 bidHash) external public;
 
-    function removeBid(string bidHash) external returns (string);
+    function removeBid() external public;
 
-    function confirmBid(uint64 bid, uint256 salt) external returns (string);
+    function confirmBid(uint128 bidValue, uint256 salt) external public;
 
     function update() external;
 
