@@ -14,6 +14,13 @@ struct WhoIsInfo {
     Records records;
 }
 
+enum Phase {OPEN, CONFIRMATION, CLOSE}
+
+struct PhaseTime {
+    uint32 startTime;
+    uint32 finishTime;
+}
+
 
 library CertificateErrors {
     uint constant IS_NOT_OWNER = 101;

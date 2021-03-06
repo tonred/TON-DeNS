@@ -1,26 +1,8 @@
 pragma ton-solidity ^0.37.0;
 
 import "./interfaces/IDomainAuction.sol";
+import {Phase, PhaseTime} from "./DeNSLib.sol";
 
-
-enum Phase {OPEN, CONFIRMATION, CLOSE}
-
-struct PhaseTime {
-    uint32 startTime;
-    uint32 finishTime;
-}
-
-//    struct HistoryRecord {
-//        uint32 auctionStartTime;
-//        uint32 auctionFinishTime;
-//        uint32 domainExpiresAt;
-//        uint64 bidsHashesCount;
-//        uint64 bidsCount;
-//        ufixed confirmationPercent; // ? todo ?
-//        uint128 highestBid;
-//        uint128 sellBid;
-//        ufixed pricePerDay;
-//    }
 
 struct Bid {
     address owner;
@@ -28,23 +10,20 @@ struct Bid {
 }
 
 library AuctionErrors {
-    uint constant NOT_ENOUGH_TOKENS_FOR_BID = 101;
-    uint constant BID_ALREADY_MADE = 101;
-    uint constant NO_BID_TO_REMOVE = 101;
-    uint constant CANNOT_CONFIRM_BID_IN_CONFIRMATION_PHASE = 101;
-    uint constant CANNOT_CONFIRM_BID_IN_CLOSE_PHASE = 101;
-    uint constant CANNOT_REMOVE_BID_IN_CONFIRMATION_PHASE = 101;
-    uint constant BID_TOO_LOW = 101;
-    uint constant CANNOT_MAKE_BID_IN_CONFIRMATION_PHASE = 101;
-    uint constant NO_BID_TO_CONFIRM = 101;
-    uint constant BID_ALREADY_CONFIRMED = 101;
-    uint constant CONFIRMATION_HASH_NOT_MATCH_BID_HASH = 101;  // mismatch
-    uint constant TOKEN_VALUE_LESS_THAN_BID = 101;
+    uint8 constant DURATION_TOO_SHORT = 101;
+    uint8 constant WRONG_PHASE = 102;
+    uint8 constant NO_SUCH_BID = 103;
+    uint8 constant BID_ALREADY_MADE = 104;
+    uint8 constant NOT_ENOUGH_TOKENS = 105;
+    uint8 constant BID_TOO_LOW = 106;
+    uint8 constant BID_ALREADY_CONFIRMED = 107;
+    uint8 constant CONFIRMATION_HASH_NOT_MATCH_BID_HASH = 108;
+    uint8 constant TOKEN_VALUE_LESS_THAN_BID = 109;
 }
 
-contract Auction is IDomainAuction {
-//    uint32 constant AUCTION_CONFIRMATION_DURATION = 1 days;
-    uint32 constant AUCTION_CONFIRMATION_DURATION = 30 seconds;
+
+contract DomainAuction is IDomainAuction {
+    uint32 constant AUCTION_CONFIRMATION_DURATION = 1 days;
     uint128 constant AUCTION_DEPOSIT = 100 ton;
     uint128 constant AUCTION_FEE = 1 ton;
     uint128 constant MIN_BID_VALUE = 1 nanoton;
@@ -81,8 +60,18 @@ contract Auction is IDomainAuction {
         setupPhasesTime(auctionDuration);
     }
 
+    modifier inPhase(Phase p) {
+        require(phase == p, AuctionErrors.WRONG_PHASE);
+        _;
+    }
+
+    modifier bidExists() {
+        require(bidsHashes.exists(msg.sender), AuctionErrors.NO_SUCH_BID);
+        _;
+    }
+
     function setupPhasesTime(uint32 auctionDuration) private {
-        // todo duration more than AUCTION_CONFIRMATION_DURATION
+        require(auctionDuration > AUCTION_CONFIRMATION_DURATION, AuctionErrors.DURATION_TOO_SHORT);
         uint32 startTime = now;
         uint32 finishTime = startTime + auctionDuration;
         uint32 splitTime = finishTime - AUCTION_CONFIRMATION_DURATION;
@@ -91,45 +80,43 @@ contract Auction is IDomainAuction {
         closeTime = PhaseTime(finishTime, domainExpiresAt);
     }
 
-    function getAddressNIC() external view returns (address) {
+    function getAddressNIC() public view override returns (address) {
         return addressNIC;
     }
 
-    function getRelativeDomainName() external view returns (string) {
+    function getRelativeDomainName() public view override returns (string) {
         return relativeDomainName;
     }
 
-    function getDomainExpiresAt() external view returns (uint32) {
+    function getDomainExpiresAt() public view override returns (uint32) {
         return domainExpiresAt;
     }
 
-    function getPhase() external returns (Phase) {
+    function getPhase() public override returns (Phase) {
         update();
         return phase;
     }
 
-    function getOpenTime() external view returns (PhaseTime) {
+    function getOpenTime() public view override returns (PhaseTime) {
         return openTime;
     }
 
-    function getConfirmationTime() external view returns (PhaseTime) {
+    function getConfirmationTime() public view override returns (PhaseTime) {
         return confirmationTime;
     }
 
-    function getCloseTime() external view returns (PhaseTime) {
+    function getCloseTime() public view override returns (PhaseTime) {
         return closeTime;
     }
 
-    function getCurrentBidsCount() external view returns (uint64) {
+    function getCurrentBidsCount() public view override returns (uint64) {
         return bidsHashesCount;
     }
 
-    function makeBid(uint256 bidHash) external public {
+    function makeBid(uint256 bidHash) public override inPhase(Phase.OPEN) {
         update();
-        require(phase != Phase.CONFIRMATION, AuctionErrors.CANNOT_MAKE_BID_IN_CONFIRMATION_PHASE);
-        require(phase != Phase.CLOSE, AuctionErrors.CANNOT_MAKE_BID_IN_CONFIRMATION_PHASE);
         require(!bidsHashes.exists(msg.sender), AuctionErrors.BID_ALREADY_MADE);
-        require(msg.value >= AUCTION_DEPOSIT, AuctionErrors.NOT_ENOUGH_TOKENS_FOR_BID);
+        require(msg.value >= AUCTION_DEPOSIT, AuctionErrors.NOT_ENOUGH_TOKENS);
         if (msg.value > AUCTION_DEPOSIT) {
             msg.sender.transfer(msg.value - AUCTION_DEPOSIT);
         }
@@ -137,23 +124,17 @@ contract Auction is IDomainAuction {
         bidsHashesCount++;
     }
 
-    function removeBid() external public {
+    function removeBid() public override inPhase(Phase.OPEN) bidExists {
         update();
-        require(phase != Phase.CONFIRMATION, AuctionErrors.CANNOT_REMOVE_BID_IN_CONFIRMATION_PHASE);
-        require(phase != Phase.CLOSE, AuctionErrors.CANNOT_REMOVE_BID_IN_CONFIRMATION_PHASE);
-        require(bidsHashes.exists(msg.sender), AuctionErrors.NO_BID_TO_REMOVE);
         tvm.accept();
         delete bidsHashes[msg.sender];
         bidsHashesCount--;
         msg.sender.transfer(AUCTION_DEPOSIT - AUCTION_FEE);
     }
 
-    function confirmBid(uint128 bidValue, uint256 salt) external public {
+    function confirmBid(uint128 bidValue, uint256 salt) public override inPhase(Phase.CONFIRMATION) bidExists {
         update();
-        require(phase != Phase.OPEN, AuctionErrors.CANNOT_CONFIRM_BID_IN_CONFIRMATION_PHASE);
-        require(phase != Phase.CLOSE, AuctionErrors.CANNOT_CONFIRM_BID_IN_CLOSE_PHASE);
         require(bidValue >= MIN_BID_VALUE, AuctionErrors.BID_TOO_LOW);
-        require(bidsHashes.exists(msg.sender), AuctionErrors.NO_BID_TO_CONFIRM);
         require(!confirmedBids.exists(msg.sender), AuctionErrors.BID_ALREADY_CONFIRMED);
         uint256 bidHash = hash(bidValue, salt);
         uint256 bidHashMemo = bidsHashes[msg.sender];
@@ -176,7 +157,7 @@ contract Auction is IDomainAuction {
         updateResults(bid);
     }
 
-    function hash(uint128 bidValue, uint256 salt) pure private returns (uint256) {
+    function hash(uint128 bidValue, uint256 salt) private pure returns (uint256) {
         TvmBuilder builder;
         builder.store(bidValue, salt);
         TvmCell cell = builder.toCell();
@@ -192,7 +173,7 @@ contract Auction is IDomainAuction {
         }
     }
 
-    function update() external public {
+    function update() public override {
         if (phase == Phase.OPEN && now >= confirmationTime.startTime) {
             tvm.accept();
             phase = Phase.CONFIRMATION;
@@ -214,10 +195,12 @@ contract Auction is IDomainAuction {
             // one winner (one bid)
             owner = highestBid.owner;
             cost = highestBid.value;
+            // todo call + send all
         } else {
             // one winner (many bids)
             owner = highestBid.owner;
             cost = secondHighestBid.value;
+            // todo call + send all
         }
         emit HistoryRecord(
             openTime.startTime,
@@ -229,10 +212,6 @@ contract Auction is IDomainAuction {
             cost
         );
         // todo manage money
-    }
-
-    function test() public pure returns (bool) {
-        return true;
     }
 
 }
