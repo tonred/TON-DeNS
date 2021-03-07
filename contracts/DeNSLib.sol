@@ -17,6 +17,13 @@ struct WhoIsInfo {
 
 enum RegistrationTypes { OwnerOnly, Auction, Instant }
 
+enum Phase {OPEN, CONFIRMATION, CLOSE}
+
+struct PhaseTime {
+    uint32 startTime;
+    uint32 finishTime;
+}
+
 library CertificateErrors {
     uint constant IS_NOT_OWNER = 101;
     uint constant IS_EXT_MSG = 102;
