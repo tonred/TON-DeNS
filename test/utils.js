@@ -1,6 +1,7 @@
 require('dotenv').config({path: './.env'});
 
 const TONTestingSuite = require("ton-testing-suite");
+const {ContractWrapper} = require("ton-testing-suite");
 
 function loadTestingEnv() {
     console.log(process.env.NETWORK);
@@ -23,7 +24,16 @@ function loadTestingEnv() {
     return {ARTIFACTS_PATH: process.env.ARTIFACTS_PATH, ALIAS: process.env.ALIAS, tonWrapper: tonWrapper}
 }
 
+function copyContract(contract) {
+    return new ContractWrapper(
+        contract.tonWrapper,
+        contract.abi,
+        contract.imageBase64
+    );
+}
+
 module.exports = {
-    loadTestingEnv: loadTestingEnv
+    loadTestingEnv: loadTestingEnv,
+    copyContract: copyContract
 }
 

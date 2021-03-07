@@ -7,27 +7,28 @@ struct Records{
 }
 
 struct WhoIsInfo {
-    string absoluteDomainName;
     address parent;
+    string path;
+    string name;
     address owner;
     uint32 expiresAt;
     Records records;
 }
 
+enum RegistrationTypes { OwnerOnly, Auction, Instant }
 
 library CertificateErrors {
     uint constant IS_NOT_OWNER = 101;
     uint constant IS_EXT_MSG = 102;
     uint constant IS_NOT_ROOT = 103;
+    uint constant IS_NOT_SUBDOMAIN = 104;
 
-    uint constant INSTANT_REGISTRATION_NOT_ALLOWED = 120;
-    uint constant REGISTRATION_BY_AUCTION_NOT_ALLOWED = 121;
-    uint constant REGISTRATION_BY_OWNER_NOT_ALLOWED = 122;
-    uint constant INVALID_REGISTRATION_TYPE = 122;
-}
+    uint constant INVALID_DOMAIN_NAME = 110;
 
-library RegistrationTypes {
-    uint8 constant OWNER_ONLY = 0;
-    uint8 constant AUCTION = 1;
-    uint8 constant INSTANT = 2;
+    uint constant NOT_ALLOWED_REGISTRATION_TYPE = 120;
+    uint constant INVALID_REGISTRATION_TYPE = 121;
+
+    uint constant NOT_ENOUGH_TOKENS_FOR_INSTANT_BUY = 130;
+    uint constant DURATION_LARGER_MAX_ALLOWED_FOR_INSTANT_BUY = 131;
+    uint constant DURATION_LARGER_ROOT_CERT_EXPIRES = 132;
 }

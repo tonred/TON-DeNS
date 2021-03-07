@@ -5,7 +5,6 @@ const {
     loadDeNSAuctionContract,
     loadDeNSCertContract,
     loadDeNSRootContract,
-    loadTestWalletContract
 } = require("../migration/loadContracts");
 const {loadTestingEnv} = require("./utils");
 
@@ -69,7 +68,7 @@ describe('Test DeNS Root', async function () {
                     .equal(domain.domainName, 'Wrong domain name saved in top-level NIC');
                 expect((await ReservedNameIdentityCertificate.runLocal('getPath')).toString())
                     .to
-                    .equal("/", 'Wrong path in top-level NIC');
+                    .equal("", 'Wrong path in top-level NIC');
                 expect(await ReservedNameIdentityCertificate.runLocal('getParent'))
                     .to
                     .equal(DeNSRootContract.address, 'Wrong parent address in top-level NIC');
@@ -79,50 +78,4 @@ describe('Test DeNS Root', async function () {
             });
         })
     });
-
-    describe('Check Instant registration', async function () {
-        const reservedDomains = JSON.parse(process.env.RESERVED_DOMAINS);
-        reservedDomains.map(async (domain) => {
-            if (domain.domainName !== "🤗") {
-                return
-            }
-
-            it(`Check "${domain.domainName}" Domain`, async function () {
-                let domainAddress = await DeNSRootContract.runLocal('getResolve', {
-                    domainName: TONTestingSuite.utils.stringToBytesArray(domain.domainName)
-                });
-                console.log(domainAddress);
-                let ReservedNameIdentityCertificate = await loadDeNSCertContract(tonWrapper);
-                ReservedNameIdentityCertificate.address = domainAddress;
-
-                const TestWalletContract = await loadTestWalletContract(tonWrapper);
-                await TestWalletContract.loadMigration('Test' + ALIAS);
-
-                const registerInstantNameMessage = await tonWrapper.ton.abi.encode_message_body({
-                    address: ReservedNameIdentityCertificate.address,
-                    abi: {
-                        type: "Contract",
-                        value: ReservedNameIdentityCertificate.abi,
-                    },
-                    call_set: {
-                        function_name: 'registerInstantName',
-                        input: {domainName: TONTestingSuite.utils.stringToBytesArray("aaa"), durationInSec: 10000},
-                    },
-                    signer: {
-                        type: 'None',
-                    },
-                    is_internal: true,
-                });
-
-                await TestWalletContract.run('sendTransaction', {
-                    dest: ReservedNameIdentityCertificate.address,
-                    value: TONTestingSuite.utils.convertCrystal('123', 'nano'),
-                    bounce: true,
-                    flags: 0,
-                    payload: registerInstantNameMessage.body,
-                }, null);
-            });
-        })
-    });
-
 });

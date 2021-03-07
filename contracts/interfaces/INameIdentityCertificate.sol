@@ -1,14 +1,20 @@
 pragma ton-solidity ^0.37.0;
-import {WhoIsInfo, Records} from "../DeNSLib.sol";
+import {WhoIsInfo, Records, RegistrationTypes} from "../DeNSLib.sol";
 
 interface INameIdentityCertificate {
-    /*  Getters  */
+
+   function isAbleToRegister(uint128 requestHash) external view returns(bool, uint128, string);
+
+    function getResolve(string domainName) external view returns (address certificate);
+
     function getParent() external view returns (address);
 
-    function getAbsoluteDomainName() external view returns (string);
+    function getPath() external view returns (string);
 
-    function getRelativeDomainName() external view returns (string);
+    function getName() external view returns (string);
 
+
+    /*  Getters  */
     function getAddress() external view returns (address);
 
     function getAdnlAddress() external view returns (string);
@@ -19,7 +25,7 @@ interface INameIdentityCertificate {
 
     function getWhoIs() external view returns (WhoIsInfo);
 
-    function getRegistrationType() external view returns (uint8);
+    function getRegistrationType() external view returns (RegistrationTypes);
 
     function getExpiresAt() external view returns (uint32);
 
@@ -31,7 +37,7 @@ interface INameIdentityCertificate {
     /*  Owner functions  */
     function setOwner(address newOwner) external;
 
-    function setRegistrationType(uint8 newRegistrationType) external;
+    function setRegistrationType(RegistrationTypes newRegistrationType) external;
 
     function setAddress(address newAddress) external;
 
