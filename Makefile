@@ -15,7 +15,7 @@ help:
 
 deploy: deploy-contracts deploy-debot
 	@echo "deploy-all"
-	node migration
+	npm run migrate
 
 deploy-contracts:
 	@echo "deploy-contracts:"
@@ -45,9 +45,15 @@ build-dns-auction:
 
 build-dns-test:
 	@echo "build-dns-test"
+	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_ROOT_CONTRACT))
+	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_NIC_CONTRACT))
+	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_AUCTION_CONTRACT))
+	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_WALLET_CONTRACT))
+
 
 tests:
 	@echo "tests"
+	npm run test
 
 setup:
 	@echo "setup"

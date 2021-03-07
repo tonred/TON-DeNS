@@ -1,27 +1,15 @@
-require('dotenv').config({path: './.env'});
-const logger = require('mocha-logger');
 const {expect} = require('chai');
+const logger = require('mocha-logger');
 const TONTestingSuite = require("ton-testing-suite");
+const {
+    loadDeNSAuctionContract,
+    loadDeNSCertContract,
+    loadDeNSRootContract,
+    loadTestWalletContract
+} = require("../migration/loadContracts");
+const {loadTestingEnv} = require("./utils");
 
-const ARTIFACTS_PATH = process.env.ARTIFACTS_PATH
-const ALIAS = process.env.ALIAS
-
-console.log(process.env.NETWORK);
-
-const giverConfig = {
-    address: process.env.GIVER_CONTRACT,
-    abi: JSON.parse(process.env.GIVER_ABI),
-};
-const config = {
-    messageExpirationTimeout: 60000
-};
-
-const tonWrapper = new TONTestingSuite.TonWrapper({
-    network: process.env.NETWORK,
-    seed: process.env.SEED,
-    giverConfig,
-    config,
-});
+const {ARTIFACTS_PATH, ALIAS, tonWrapper} = loadTestingEnv();
 
 let DeNSRootContract;
 let NameIdentityCertificate;
@@ -32,9 +20,9 @@ describe('Test DeNS Root', async function () {
 
     before(async function () {
         await tonWrapper.setup();
-        DeNSRootContract = await TONTestingSuite.requireContract(tonWrapper, process.env.DNS_ROOT_CONTRACT, undefined, ARTIFACTS_PATH);
-        NameIdentityCertificate = await TONTestingSuite.requireContract(tonWrapper, process.env.DNS_NIC_CONTRACT, undefined, ARTIFACTS_PATH);
-        DomainAuction = await TONTestingSuite.requireContract(tonWrapper, process.env.DNS_AUCTION_CONTRACT, undefined, ARTIFACTS_PATH);
+        DeNSRootContract = await loadDeNSRootContract(tonWrapper);
+        NameIdentityCertificate = await loadDeNSCertContract(tonWrapper);
+        DomainAuction = await loadDeNSAuctionContract(tonWrapper);
         await DeNSRootContract.loadMigration(ALIAS);
         logger.log(`DeNS Root contract address: ${DeNSRootContract.address}`);
     });
@@ -74,23 +62,67 @@ describe('Test DeNS Root', async function () {
                 let domainAddress = await DeNSRootContract.runLocal('getResolve', {
                     domainName: TONTestingSuite.utils.stringToBytesArray(domain.domainName)
                 });
-                let ReservedNameIdentityCertificate = await TONTestingSuite.requireContract(
-                    tonWrapper,
-                    process.env.DNS_NIC_CONTRACT,
-                    domainAddress,
-                    ARTIFACTS_PATH
-                );
-                let reservedNicName = await ReservedNameIdentityCertificate.runLocal('getName');
-                expect(reservedNicName.toString())
+                let ReservedNameIdentityCertificate = await loadDeNSCertContract(tonWrapper);
+                ReservedNameIdentityCertificate.address = domainAddress;
+                expect((await ReservedNameIdentityCertificate.runLocal('getName')).toString())
                     .to
                     .equal(domain.domainName, 'Wrong domain name saved in top-level NIC');
-                expect(await ReservedNameIdentityCertificate.runLocal('getPath'))
+                expect((await ReservedNameIdentityCertificate.runLocal('getPath')).toString())
                     .to
-                    .have.lengthOf(0, 'Wrong path in top-level NIC');
+                    .equal("/", 'Wrong path in top-level NIC');
                 expect(await ReservedNameIdentityCertificate.runLocal('getParent'))
                     .to
                     .equal(DeNSRootContract.address, 'Wrong parent address in top-level NIC');
+                expect((await ReservedNameIdentityCertificate.runLocal('getRegistrationType')).toNumber())
+                    .to
+                    .equal(domain.registrationType, 'Wrong registration type in top-level NIC');
             });
         })
     });
+
+    describe('Check Instant registration', async function () {
+        const reservedDomains = JSON.parse(process.env.RESERVED_DOMAINS);
+        reservedDomains.map(async (domain) => {
+            if (domain.domainName !== "🤗") {
+                return
+            }
+
+            it(`Check "${domain.domainName}" Domain`, async function () {
+                let domainAddress = await DeNSRootContract.runLocal('getResolve', {
+                    domainName: TONTestingSuite.utils.stringToBytesArray(domain.domainName)
+                });
+                console.log(domainAddress);
+                let ReservedNameIdentityCertificate = await loadDeNSCertContract(tonWrapper);
+                ReservedNameIdentityCertificate.address = domainAddress;
+
+                const TestWalletContract = await loadTestWalletContract(tonWrapper);
+                await TestWalletContract.loadMigration('Test' + ALIAS);
+
+                const registerInstantNameMessage = await tonWrapper.ton.abi.encode_message_body({
+                    address: ReservedNameIdentityCertificate.address,
+                    abi: {
+                        type: "Contract",
+                        value: ReservedNameIdentityCertificate.abi,
+                    },
+                    call_set: {
+                        function_name: 'registerInstantName',
+                        input: {domainName: TONTestingSuite.utils.stringToBytesArray("aaa"), durationInSec: 10000},
+                    },
+                    signer: {
+                        type: 'None',
+                    },
+                    is_internal: true,
+                });
+
+                await TestWalletContract.run('sendTransaction', {
+                    dest: ReservedNameIdentityCertificate.address,
+                    value: TONTestingSuite.utils.convertCrystal('123', 'nano'),
+                    bounce: true,
+                    flags: 0,
+                    payload: registerInstantNameMessage.body,
+                }, null);
+            });
+        })
+    });
+
 });
