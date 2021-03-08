@@ -14,14 +14,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ton-actions/setup-tools@v2
-
-      - name: Build contracts
         with:
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
-          run: |
-            sed 's/STDLIB_PATH=stdlib_sol.tvm/STDLIB_PATH=${TVM_LINKER_LIB_PATH}/g' .env.dist > .env
-            make build
-            make clean-tmp
+          
+      - name: Build contracts
+        run: |
+          sed 's/STDLIB_PATH=stdlib_sol.tvm/STDLIB_PATH=${TVM_LINKER_LIB_PATH}/g' .env.dist > .env
+          make build
+          make clean-tmp
+          
       - uses: actions/upload-artifact@v2
         with:
           name: build-artifacts
