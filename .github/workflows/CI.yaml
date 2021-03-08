@@ -38,6 +38,39 @@ jobs:
           make build
           make clean-tmp
           
+      - name: Test
+        run: |
+          sed 's/STDLIB_PATH=stdlib_sol.tvm/STDLIB_PATH=${TVM_LINKER_LIB_PATH}/g' .env.dist > .env
+          make build
+          make clean-tmp
+          
+      
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache node modules
+        uses: actions/cache@v2.1.4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      
+      - name: Install Dependencies
+        run: npm install      
+        
+      - name: Install Node Se
+        run: docker run -d --name local-node -e USER_AGREEMENT=yes -p80:80 tonlabs/local-node
+      
+      - name: Run tests
+        run: make tests
+      
       - uses: actions/upload-artifact@v2
         with:
           name: build-artifacts
