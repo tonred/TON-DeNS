@@ -41,7 +41,6 @@ jobs:
       - name: Install Node Se
         run: |
           docker run -d --name local-node -e USER_AGREEMENT=yes -p80:80 tonlabs/local-node
-          curl "http://localhost/graphql?query=\{info\{version\}\}"
       
       - name: Check local node
         run: docker ps
