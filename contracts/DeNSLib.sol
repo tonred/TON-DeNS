@@ -29,6 +29,7 @@ library CertificateErrors {
     uint constant IS_EXT_MSG = 102;
     uint constant IS_NOT_ROOT = 103;
     uint constant IS_NOT_SUBDOMAIN = 104;
+    uint constant IS_NOT_STORAGE = 105;
 
     uint constant INVALID_DOMAIN_NAME = 110;
 
@@ -38,4 +39,5 @@ library CertificateErrors {
     uint constant NOT_ENOUGH_TOKENS_FOR_INSTANT_BUY = 130;
     uint constant DURATION_LARGER_MAX_ALLOWED_FOR_INSTANT_BUY = 131;
     uint constant DURATION_LARGER_ROOT_CERT_EXPIRES = 132;
+
 }

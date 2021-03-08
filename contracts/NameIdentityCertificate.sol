@@ -11,9 +11,8 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
     uint16 constant SEND_ALL_GAS = 128;
 
-    uint128 constant CHECK_NIC_FEE = 0.02 ton;
-    uint128 constant CHECK_NIC_VALUE = 0.1 ton;
-    uint128 constant READ_PARTICIPANT_STORAGE_VALUE = 0.1 ton;
+    uint128 constant CHECK_NIC_FEE = 0.03 ton;
+    uint128 constant DEFAULT_MESSAGE_VALUE = 0.1 ton;
     uint128 constant DEPLOY_NIC_VALUE = 1 ton;
 
     address static _parent;
@@ -21,6 +20,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
     string static _path;
     string static _name;
 
+    uint128 _startBalance;
 
     TvmCell _participantStorageCode;
 
@@ -31,8 +31,6 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
     uint128 _instantBuyPrice = 10 ton;
     uint32 _instantBuyMaxSecDuration = 4 weeks;
-
-    string[] public whs;
 
     event UpdateCertificate(
         address indexed previousOwner,
@@ -73,7 +71,6 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         TvmCell participantStorageCode
     ) public  {
         require(msg.sender == _parent, CertificateErrors.IS_NOT_ROOT);
-        tvm.accept();
 
         _certificateCode = certificateCode;
         _auctionCode = auctionCode;
@@ -81,6 +78,8 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
         _registrationType = registrationType;
         _expiresAt = expiresAt;
+
+        _startBalance = msg.value;
 
     }
 
@@ -144,72 +143,118 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
     }
 
     function registerInstantName(string domainName, uint32 durationInSec) public isAllowedRegType(RegistrationTypes.Instant){
-        tvm.rawReserve(address(this).balance - msg.value + CHECK_NIC_FEE + DEPLOY_NIC_VALUE, 2);
         require(msg.value >= _instantBuyPrice, CertificateErrors.NOT_ENOUGH_TOKENS_FOR_INSTANT_BUY);
         require(isNameValid(domainName), CertificateErrors.INVALID_DOMAIN_NAME);
         require(durationInSec < _instantBuyMaxSecDuration, CertificateErrors.DURATION_LARGER_MAX_ALLOWED_FOR_INSTANT_BUY);
-//        require(durationInSec < _instantBuyMaxSecDuration, 111)
         uint32 requestedExpiresAt = calcRequestedExpiresAt(durationInSec);
         require(requestedExpiresAt < _expiresAt, CertificateErrors.DURATION_LARGER_ROOT_CERT_EXPIRES);
+
+        tvm.rawReserve(address(this).balance - msg.value + CHECK_NIC_FEE, 2);
 
         address sender = msg.sender;
         TvmCell nicState = buildNicStateInit(domainName);
         address subdomainCertificate = address.makeAddrStd(0, tvm.hash(nicState));
-        uint128 requestHash = calcRequestHash(sender, domainName);
-        NameIdentityCertificate(subdomainCertificate).isAbleToRegister{value: CHECK_NIC_VALUE, callback: isAbleToRegisterCallback}(requestHash);
-        TvmCell participantStorageState = buildParticipantStorageStateInit(requestHash);
-        new ParticipantStorage{stateInit: participantStorageState, value: 0, flag: SEND_ALL_GAS}(sender, domainName);
+
+        ParticipantStoragePK storagePk = ParticipantStoragePK(sender, domainName);
+        uint128 requestHash = calcRequestHash(storagePk);
+
+        NameIdentityCertificate(subdomainCertificate).isAbleToRegister{value: DEFAULT_MESSAGE_VALUE, callback: isAbleToRegisterCallback}(requestHash);
+        TvmCell participantStorageState = buildParticipantStorageStateInit(address(this), requestHash);
+        ParticipantStorageData pStorageData = ParticipantStorageData(storagePk, requestedExpiresAt);
+
+        new ParticipantStorage{stateInit: participantStorageState, value: 0, flag: SEND_ALL_GAS}(pStorageData);
     }
 
-    function check(uint128 requestHash) private {
-        TvmCell userStorage = buildParticipantStorageStateInit(requestHash);
-        address pStorage = address.makeAddrStd(0, tvm.hash(userStorage));
-        ParticipantStorage(pStorage).getAndDestroy{value: READ_PARTICIPANT_STORAGE_VALUE, callback: onResponse}();
-    }
-
-    function calcRequestHash(address sender, string domainName) private returns (uint128){
+    function calcRequestHash(ParticipantStoragePK pk) private returns (uint128){
         TvmBuilder builder;
-        builder.store(sender, domainName);
+        builder.store(pk);
         return uint128(tvm.hash(builder.toCell()) >> 128);
     }
 
-    function buildParticipantStorageStateInit(uint128 requestHash) private returns(TvmCell){
+    function buildParticipantStorageStateInit(address root, uint128 requestHash) private returns(TvmCell){
         return tvm.buildStateInit({
             contr: ParticipantStorage,
             varInit: {
-                _root: address(this),
+                _root: root,
                 _requestHash: requestHash
             },
             code: _participantStorageCode
         });
     }
 
-    function onResponse(address sender, string domain) public {
-        tvm.rawReserve(address(this).balance - msg.value, 2);
-        whs.push(domain);
-        sender.transfer({value: 0, flag: SEND_ALL_GAS});
+    function onStoragePrunePayToOwner(ParticipantStoragePK storageDataPK) public {
+        uint128 requestHash = calcRequestHash(storageDataPK);
+        checkIsMessageFromStorage(requestHash);
+        tvm.rawReserve(_startBalance, 2);
+        _owner.transfer({value: 0, flag: SEND_ALL_GAS, bounce: false});
+    }
+
+    function onStoragePruneReturnFunds(ParticipantStoragePK storageDataPK) public {
+        uint128 requestHash = calcRequestHash(storageDataPK);
+        checkIsMessageFromStorage(requestHash);
+        tvm.rawReserve(math.max(_startBalance, address(this).balance - msg.value), 2);
+        storageDataPK.account.transfer({value: 0, flag: SEND_ALL_GAS, bounce: false});
+    }
+
+    function checkIsMessageFromStorage(uint128 requestHash) private {
+        address pStorage = calcParticipantStorageAddress(requestHash);
+        require(msg.sender == pStorage, CertificateErrors.IS_NOT_STORAGE);
+    }
+
+
+
+    function calcParticipantStorageAddress(uint128 requestHash) private returns(address){
+        TvmCell storageState = buildParticipantStorageStateInit(address(this), requestHash);
+        return address.makeAddrStd(0, tvm.hash(storageState));
+    }
+
+
+    function onUpdateChildCert(string domain, address sender, bool successful) public {
+        checkIsMessageFromSubdomain(domain);
+        uint128 requestHash = calcRequestHash(ParticipantStoragePK(sender, domain));
+        address pStorage = calcParticipantStorageAddress(requestHash);
+        if (successful) ParticipantStorage(pStorage).prune{value: DEFAULT_MESSAGE_VALUE, callback: onStoragePrunePayToOwner}();
+        else ParticipantStorage(pStorage).prune{value: DEFAULT_MESSAGE_VALUE, callback: onStoragePruneReturnFunds}();
+
+    }
+
+    function onStorageReadResponse(ParticipantStorageData storageData) public {
+        uint128 requestHash = calcRequestHash(storageData.pk);
+        checkIsMessageFromStorage(requestHash);
+        address cert = deployCertificate(storageData.pk.domainName, RegistrationTypes.Instant, 0, DEPLOY_NIC_VALUE);
+        NameIdentityCertificate(cert).updateCertificate{value: DEFAULT_MESSAGE_VALUE , callback: onUpdateChildCert}(storageData.pk.account, storageData.requestedExpiresAt);
     }
 
     onBounce(TvmSlice slice) external {
-		uint32 functionId = slice.decode(uint32);
-		if (functionId == tvm.functionId(isAbleToRegister)) {
+        uint32 functionId = slice.decode(uint32);
+        if (functionId == tvm.functionId(isAbleToRegister)) {
             (uint32 _, uint128 requestHash) = slice.decodeFunctionParams(isAbleToRegister);
-            //TODO read data from storage and deploy on callback
-            deployCertificate(string("asd"), RegistrationTypes.Instant, _expiresAt - 1, DEPLOY_NIC_VALUE);
-//            check(requestHash);
-		}
+            address pStorage = calcParticipantStorageAddress(requestHash);
+            ParticipantStorage(pStorage).getDataAndWithdraw{value: DEFAULT_MESSAGE_VALUE, callback: onStorageReadResponse}(DEPLOY_NIC_VALUE + DEFAULT_MESSAGE_VALUE);
+        } else if (functionId == tvm.functionId(updateCertificate)){
+            // TODO return funds
+        }
     }
 
     function isAbleToRegister(uint128 requestHash) public view override returns(bool, uint128, string){
         tvm.rawReserve(address(this).balance - msg.value, 2);
-        return{value: 0, flag: 128} (true, requestHash, _name);
+        // todo is able?
+        return{value: 0, flag: SEND_ALL_GAS} (false, requestHash, _name);
     }
 
     function isAbleToRegisterCallback(bool isAvailable, uint128 requestHash, string domainName) public{
-        TvmCell nicState = buildNicStateInit(domainName);
-        address subdomainCertificate = address.makeAddrStd(0, tvm.hash(nicState));
-        require(msg.sender == subdomainCertificate, CertificateErrors.IS_NOT_SUBDOMAIN);
+        checkIsMessageFromSubdomain(domainName);
+        if (!isAvailable) {
+            address pStorage = calcParticipantStorageAddress(requestHash);
+            ParticipantStorage(pStorage).prune{value: DEFAULT_MESSAGE_VALUE, callback: onStoragePruneReturnFunds}();
+        }
         // TODO update
+    }
+
+     function checkIsMessageFromSubdomain(string domainName) private {
+         TvmCell nicState = buildNicStateInit(domainName);
+         address subdomainCertificate = address.makeAddrStd(0, tvm.hash(nicState));
+         require(msg.sender == subdomainCertificate, CertificateErrors.IS_NOT_SUBDOMAIN);
     }
 
 
@@ -217,13 +262,19 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
     *  Parent functions
     */
 
-    function updateCertificate(address newOwner, uint32 newExpiresAt) public override onlyParent {
+    function updateCertificate(address newOwner, uint32 newExpiresAt) public override onlyParent returns(string, address, bool){
         // TODO add checks
+        if (false){
+//        require(_expiresAt == 0, 111);
+            return{value: 0, flag: SEND_ALL_GAS} (_name, newOwner, false);
+        }
+        tvm.rawReserve(address(this).balance - msg.value, 2);
         address previousOwner = _owner;
         uint32 previousExpiresAt = _expiresAt;
         _setOwner(newOwner);
         _setExpiresAt(newExpiresAt);
         emit UpdateCertificate(previousOwner, newOwner, previousExpiresAt, newExpiresAt);
+        return{value: 0, flag: SEND_ALL_GAS} (_name, newOwner, true);
     }
 
     /*
@@ -338,9 +389,12 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         });
     }
 
-    function deployCertificate(string domainName, RegistrationTypes registrationType, uint32 expiresAt, uint128 value) internal {
+    function deployCertificate(string domainName, RegistrationTypes registrationType, uint32 expiresAt, uint128 value) internal returns(address){
         TvmCell state = buildNicStateInit(domainName);
-        new CertificateDeployable{stateInit: state, value: value}(expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+        return new CertificateDeployable{
+            stateInit: state,
+            value: value
+        }(expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
     }
 
 }

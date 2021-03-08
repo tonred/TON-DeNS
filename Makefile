@@ -12,6 +12,11 @@ help:
 	@echo "deploy - deploy all contracts"
 	@echo "tests - test contracts"
 
+simple: build deploy tests
+	@echo "simple"
+
+ts4: build-dns-test
+	/usr/local/bin/python3.8 /Users/pavel/PycharmProjects/TON-DeNS1/test/ts4/test.py
 
 deploy: deploy-contracts deploy-debot
 	@echo "deploy-all"

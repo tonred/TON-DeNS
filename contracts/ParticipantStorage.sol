@@ -1,25 +1,45 @@
 pragma ton-solidity ^0.37.0;
 
+struct ParticipantStoragePK{
+    address account;
+    string domainName;
+}
+
+struct ParticipantStorageData{
+    ParticipantStoragePK pk;
+    uint32 requestedExpiresAt;
+}
+
 contract ParticipantStorage {
     address static _root;
     uint128 static _requestHash;
-    address _account;
-    string _registeredDomainName;
+    ParticipantStorageData _data;
 
     /*
     Exception codes:
-    100 - message sender is not a root;
+    101 - message sender is not a root;
     */
 
-    constructor(address account, string registeredDomainName) public {
-        require(msg.sender == _root, 100);
-        tvm.accept();
-        _account = account;
-        _registeredDomainName = registeredDomainName;
+    modifier onlyRoot {
+        require(msg.sender == _root, 101);
+        _;
     }
 
-    function getAndDestroy() public returns(address, string) {
-        require(msg.sender == _root, 100);
-        return{value: 0, flag: 160} (_account, _registeredDomainName);
+    constructor(ParticipantStorageData data) public onlyRoot{
+        _data = data;
+    }
+
+    function getData() public view returns (ParticipantStorageData) {
+        tvm.rawReserve(address(this).balance - msg.value, 2);
+        return{value: 0, flag: 128} _data;
+    }
+
+    function getDataAndWithdraw(uint128 value) public view onlyRoot returns (ParticipantStorageData) {
+        tvm.rawReserve(address(this).balance - msg.value - value, 2);
+        return{value: 0, flag: 128} _data;
+    }
+
+    function prune() public view returns (ParticipantStoragePK) {
+        return{value: 0, flag: 160} _data.pk;
     }
 }

@@ -38,14 +38,23 @@ describe('Test Instant registration', async function () {
     describe(`Check Domain`, async function () {
         let firstSubDomainAddr;
         let firstSubDomainCert;
+        let secondSubDomainCert;
+        let secondSubDomainAddr;
         let name = 'asd';
+        let value = '11';
+        let duration = 60 * 60 * 24;
 
         before(async function () {
-            await instantBuyDomain(rootCert, name, 10000, '23');
+            await instantBuyDomain(rootCert, name, duration, value);
             firstSubDomainAddr = await rootCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(name)});
             firstSubDomainCert = copyContract(NicContract);
             firstSubDomainCert.address = firstSubDomainAddr;
             logger.log(`Subdomain Certificate: ${firstSubDomainAddr}`);
+            await instantBuyDomain(firstSubDomainCert, name, duration - 100, value);
+            secondSubDomainAddr = await firstSubDomainCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(name)});
+            secondSubDomainCert = copyContract(NicContract);
+            secondSubDomainCert.address = secondSubDomainAddr;
+            logger.log(`Sub-Subdomain Certificate: ${secondSubDomainAddr}`);
         });
         it('Check subdomain parent', async function () {
             expect(await firstSubDomainCert.runLocal('getParent'))
@@ -62,6 +71,55 @@ describe('Test Instant registration', async function () {
                 .to
                 .below((await rootCert.runLocal('getExpiresAt')).toNumber(), 'Wrong expiresAt');
         });
+        it('Check subdomain owner', async function () {
+            expect(await firstSubDomainCert.runLocal('getOwner'))
+                .to
+                .equal(TestWalletContract.address, 'Wrong owner address');
+        });
+
+        it('Check 2subdomain parent', async function () {
+            expect(await secondSubDomainCert.runLocal('getParent'))
+                .to
+                .equal(firstSubDomainCert.address, 'Wrong parent');
+        });
+        it('Check 2subdomain name', async function () {
+            expect((await secondSubDomainCert.runLocal('getName')).toString())
+                .to
+                .equal(name, 'Wrong name');
+        });
+        it('Check 2subdomain expiresAt', async function () {
+            expect((await secondSubDomainCert.runLocal('getExpiresAt')).toNumber())
+                .to
+                .below((await firstSubDomainCert.runLocal('getExpiresAt')).toNumber(), 'Wrong expiresAt');
+        });
+        it('Check 2subdomain owner', async function () {
+            expect(await secondSubDomainCert.runLocal('getOwner'))
+                .to
+                .equal(TestWalletContract.address, 'Wrong owner address');
+        });
+        it('Check buy with wrong duration', async function () {
+            await instantBuyDomain(secondSubDomainCert, name, duration + 100, value);
+            let addr = await secondSubDomainCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(name)});
+            expect(await getAccountType(addr))
+                .to
+                .equal(0, 'Domain was expected not to be registered, but it is registered');
+        });
+        it('Check buy with low value', async function () {
+            await instantBuyDomain(secondSubDomainCert, name, duration - 2000, '5');
+            let addr = await secondSubDomainCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(name)});
+            expect(await getAccountType(addr))
+                .to
+                .equal(0, 'Domain was expected not to be registered, but it is registered');
+        });
+        it('Check buy with wrong name', async function () {
+            let wrong_name = 'test/test';
+            await instantBuyDomain(secondSubDomainCert, wrong_name, duration - 2000, value);
+            let addr = await secondSubDomainCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(wrong_name)});
+            expect(await getAccountType(addr))
+                .to
+                .equal(0, 'Domain was expected not to be registered, but it is registered');
+        });
+
     });
 });
 
@@ -96,4 +154,14 @@ async function resolve(cert, name) {
     return await cert.runLocal('getResolve', {
         domainName: TONTestingSuite.utils.stringToBytesArray(name)
     });
+}
+
+async function getAccountType(account) {
+    const {result} = await tonWrapper.ton.net.query_collection({
+        collection: "accounts",
+        filter: {id: {eq: account}},
+        result: "acc_type",
+    });
+    if (!result[0]) return 0;
+    return result[0].acc_type;
 }
