@@ -1,9 +1,9 @@
 require('dotenv').config({path: './.env'});
 const TONTestingSuite = require('ton-testing-suite');
 const {setupKeyPairs} = require('./utils.js');
-const {deployDeNSRoot} = require("./1_deploy_DeNSRoot");
-const {deployDeNSDebot} = require("./2_deploy_DeNSDebot");
-const {deployDomainAuction} = require("./3_deploy_DomainAuction");
+const {deployDeNSRoot} = require("./1-deploy-DeNSRoot");
+const {deployDeNSDebot} = require("./2-deploy-DeNSDebot");
+const {deployTestContracts} = require("./3-deploy-TestContracts");
 
 const giverConfig = {
     address: process.env.GIVER_CONTRACT,
@@ -26,9 +26,14 @@ tonWrapper._setupKeyPairs = setupKeyPairs;
 (async () => {
     await tonWrapper.setup(10);
     const migration = new TONTestingSuite.Migration(tonWrapper);
+    await deployDeNSRoot(tonWrapper, migration);
     // const DeNSRootContract = await deployDeNSRoot(tonWrapper, migration);
     // const DeNSDebotContract = await deployDeNSDebot(tonWrapper, migration);
     const domainAuction = await deployDomainAuction(tonWrapper, migration);
 
+    // await deployDeNSDebot(tonWrapper, migration);
+    if (eval(process.env.IS_TESTING_ENV)){
+        await deployTestContracts(tonWrapper, migration)
+    }
     process.exit(0);
 })();

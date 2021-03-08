@@ -15,7 +15,7 @@ help:
 
 deploy: deploy-contracts deploy-debot
 	@echo "deploy-all"
-	node migration
+	npm run migrate
 
 deploy-contracts:
 	@echo "deploy-contracts:"
@@ -23,7 +23,7 @@ deploy-contracts:
 deploy-debot:
 	@echo "deploy-debot"
 
-build: build-dns-root build-dns-cert build-dns-debot build-dns-auction build-dns-test
+build: build-dns-root build-dns-cert build-dns-debot build-dns-auction build-dns-test build-dns-participant-storage
 	@echo "build"
 
 build-dns-root:
@@ -42,12 +42,22 @@ build-dns-auction:
 	@echo "build-dns-auction"
 	$(call compile_all,$(CONTRACTS_PATH),$(DNS_AUCTION_CONTRACT))
 
+build-dns-participant-storage:
+	@echo "build-dns-participant-storage"
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_PARTICIPANT_STORAGE_CONTRACT))
+
 
 build-dns-test:
 	@echo "build-dns-test"
+	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_ROOT_CONTRACT))
+	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_NIC_CONTRACT))
+	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_AUCTION_CONTRACT))
+	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_WALLET_CONTRACT))
+
 
 tests:
 	@echo "tests"
+	npm run test
 
 setup:
 	@echo "setup"
@@ -61,7 +71,8 @@ clean: clean-tmp
 clean-tmp:
 	rm -f $(ARTIFACTS_PATH)/*.sh \
 		  $(ARTIFACTS_PATH)/*.result \
-		  $(ARTIFACTS_PATH)/*.code
+		  $(ARTIFACTS_PATH)/*.code \
+		  $(ARTIFACTS_PATH)/Test*.*
 
 
 define compile_all

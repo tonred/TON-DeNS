@@ -1,9 +1,10 @@
 const TONTestingSuite = require("ton-testing-suite");
-const ARTIFACTS_PATH = process.env.ARTIFACTS_PATH
+const {loadDeNSRootContract, loadDeNSDebotContract} = require("./loadContracts");
+
 
 async function deployDeNSDebot(tonWrapper, migration) {
-    const DeNSDebotContract = await TONTestingSuite.requireContract(tonWrapper, process.env.DNS_DEBOT_CONTRACT, undefined, ARTIFACTS_PATH);
-    const DeNSRootContract = await TONTestingSuite.requireContract(tonWrapper, process.env.DNS_ROOT_CONTRACT, undefined, ARTIFACTS_PATH);
+    const DeNSRootContract = await loadDeNSRootContract(tonWrapper);
+    const DeNSDebotContract = await loadDeNSDebotContract(tonWrapper);
     await DeNSRootContract.loadMigration(process.env.ALIAS);
     await migration.deploy({
         contract: DeNSDebotContract,

@@ -3,49 +3,30 @@ pragma ton-solidity ^0.37.0;
 import "interfaces/IDomainBase.sol";
 import {CertificateErrors} from "./DeNSLib.sol";
 
-
 abstract contract DomainBase is IDomainBase {
-    TvmCell certificateCode;
-    TvmCell auctionCode;
+    TvmCell _certificateCode;
+    TvmCell _auctionCode;
 
     /*
      * modifiers
      */
 
-    modifier onlyInternalMessage {
-        require(msg.sender != address(0), CertificateErrors.IS_EXT_MSG);
-        _;
-    }
-
-//    onBounce(TvmSlice body) external {
-//        /*...*/
-//    }
 
     /*
      *  Getters
      */
 
-    function getResolve(string domainName) view public override returns (address certificate){
-        certificate = address(0);
-    }
-
     function getCertificateCode() view public override returns (TvmCell){
-        return certificateCode;
+        return _certificateCode;
     }
 
     function getAuctionCode() view public override returns (TvmCell){
-        return auctionCode;
+        return _auctionCode;
     }
 
     /*
     *  Public functions
     */
-
-    function checkDomainCallback() public {
-        //TODO check where from message
-
-    }
-
 
     /*
      *  Private functions
@@ -53,4 +34,14 @@ abstract contract DomainBase is IDomainBase {
 
     function splitDomain(string domainName) private returns (string, string){}
 
+    function isNameValid(string name) internal pure returns (bool){
+        bytes name_bytes = bytes(name);
+        for(uint8 i = 0; i < name_bytes.length; i++){
+            byte c = name_bytes[i];
+            if ( c == 0x2F || c == 0x2E){
+                return false;
+            }
+        }
+        return true;
+    }
 }
