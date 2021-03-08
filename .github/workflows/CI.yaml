@@ -17,6 +17,21 @@ jobs:
         with:
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           
+      - name: Cache node modules
+        uses: actions/cache@v2.1.4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      
+      - name: Install Dependencies
+        run: npm install
+       
       - name: Build contracts
         run: |
           sed 's/STDLIB_PATH=stdlib_sol.tvm/STDLIB_PATH=${TVM_LINKER_LIB_PATH}/g' .env.dist > .env
