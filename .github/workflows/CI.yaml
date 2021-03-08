@@ -41,6 +41,9 @@ jobs:
       - name: Install Node Se
         run: docker run -d --name local-node -e USER_AGREEMENT=yes -p80:80 tonlabs/local-node
       
+      - name: Check local node
+        run: curl "https://main.ton.dev/graphql?query=\{info\{version\}\}"
+      
       - name: Run magration to local node
         run: make deploy
       
