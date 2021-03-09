@@ -123,6 +123,26 @@
 			]
 		},
 		{
+			"name": "onUpdateChildCert",
+			"inputs": [
+				{"name":"domain","type":"bytes"},
+				{"name":"sender","type":"address"},
+				{"name":"successful","type":"bool"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "isAbleToRegisterCallback",
+			"inputs": [
+				{"name":"isAvailable","type":"bool"},
+				{"name":"requestHash","type":"uint128"},
+				{"name":"domainName","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "onStoragePrunePayToOwner",
 			"inputs": [
 				{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"storageDataPK","type":"tuple"}
@@ -134,16 +154,6 @@
 			"name": "onStoragePruneReturnFunds",
 			"inputs": [
 				{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"storageDataPK","type":"tuple"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "onUpdateChildCert",
-			"inputs": [
-				{"name":"domain","type":"bytes"},
-				{"name":"sender","type":"address"},
-				{"name":"successful","type":"bool"}
 			],
 			"outputs": [
 			]
@@ -165,16 +175,6 @@
 				{"name":"value0","type":"bool"},
 				{"name":"value1","type":"uint128"},
 				{"name":"value2","type":"bytes"}
-			]
-		},
-		{
-			"name": "isAbleToRegisterCallback",
-			"inputs": [
-				{"name":"isAvailable","type":"bool"},
-				{"name":"requestHash","type":"uint128"},
-				{"name":"domainName","type":"bytes"}
-			],
-			"outputs": [
 			]
 		},
 		{

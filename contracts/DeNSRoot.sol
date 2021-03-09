@@ -6,7 +6,6 @@ import {RegistrationTypes} from "DeNSLib.sol";
 import {CertificateDeployable} from "./AbstractNameIdentityCertificate.sol";
 
 contract DeNSRoot is DomainBase, IDeNSRoot {
-    // TODO: Move to Base contract after bug with static vars will be fixed
     address static _parent;
 
     string static _path;
@@ -21,11 +20,16 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
     }
 
     modifier onlyParent {
-        require(msg.sender == _parent, CertificateErrors.IS_NOT_OWNER);
+        require(msg.sender == _parent, DeNsErrors.IS_NOT_OWNER);
         _;
     }
 
-    constructor(TvmCell certificateCode, TvmCell auctionCode, TvmCell participantStorageCode, ReservedDomain[] reservedDomains) public {
+    constructor(
+        TvmCell certificateCode,
+        TvmCell auctionCode,
+        TvmCell participantStorageCode,
+        ReservedDomain[] reservedDomains
+    ) public {
     // TODO check message from owner;
         tvm.accept();
 
@@ -38,25 +42,25 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         }
     }
 
-    // TODO: STATIC FIX
-    function getResolve(string domainName) view public override returns (address){
+    // TODO: Move to Base contract after bug with static vars will be fixed in SOLC
+    function getResolve(string domainName) public view override returns (address certificate) {
         TvmCell state = buildNicStateInit(domainName);
-        return address.makeAddrStd(0, tvm.hash(state));
+        certificate = address.makeAddrStd(0, tvm.hash(state));
     }
 
-    function getParent() view public override returns (address){
+    function getParent() public view override returns (address) {
         return _parent;
     }
 
-    function getPath() view public override returns (string){
+    function getPath() public view override returns (string) {
         return _path;
     }
 
-    function getName() view public override returns (string){
+    function getName() public view override returns (string) {
         return _name;
     }
 
-    function buildNicStateInit(string domainName) internal view returns(TvmCell){
+    function buildNicStateInit(string domainName) internal view returns (TvmCell) {
         string childContractPath = _path;
         if (_name.byteLength() > 0) {
             if (_path.byteLength() > 0) {
@@ -75,9 +79,18 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         });
     }
 
-    function deployCertificate(string domainName, RegistrationTypes registrationType, uint32 expiresAt, uint128 value) internal {
+    function deployCertificate(
+        string domainName,
+        RegistrationTypes registrationType,
+        uint32 expiresAt,
+        uint128 value
+    ) internal returns (address) {
         TvmCell state = buildNicStateInit(domainName);
-        new CertificateDeployable{stateInit: state, value: value}(expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+        return new CertificateDeployable{
+            stateInit: state,
+            value: value
+        }(expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+    // todo add address owner and other params
     }
 
 

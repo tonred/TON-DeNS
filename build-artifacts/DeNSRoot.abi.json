@@ -19,7 +19,7 @@
 				{"name":"domainName","type":"bytes"}
 			],
 			"outputs": [
-				{"name":"value0","type":"address"}
+				{"name":"certificate","type":"address"}
 			]
 		},
 		{

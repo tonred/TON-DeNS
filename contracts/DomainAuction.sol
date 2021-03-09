@@ -1,7 +1,7 @@
 pragma ton-solidity ^0.37.0;
 
 import "./interfaces/IDomainAuction.sol";
-import {Phase, PhaseTime} from "./DeNSLib.sol";
+import {AuctionPhase, AuctionPhaseTime} from "./DeNSLib.sol";
 
 
 struct Bid {
@@ -31,10 +31,10 @@ contract DomainAuction is IDomainAuction {
     address static addressNIC;
     string static relativeDomainName;
     uint32 domainExpiresAt;
-    Phase phase;
-    PhaseTime openTime;
-    PhaseTime confirmationTime;
-    PhaseTime closeTime;
+    AuctionPhase phase;
+    AuctionPhaseTime openTime;
+    AuctionPhaseTime confirmationTime;
+    AuctionPhaseTime closeTime;
     mapping(address => uint256) bidsHashes;
     uint64 bidsHashesCount;
     mapping(address => bool) confirmedBids;
@@ -56,11 +56,11 @@ contract DomainAuction is IDomainAuction {
     constructor(uint32 thisDomainExpiresAt, uint32 auctionDuration) public {
         tvm.accept();
         domainExpiresAt = thisDomainExpiresAt;
-        phase = Phase.OPEN;
+        phase = AuctionPhase.OPEN;
         setupPhasesTime(auctionDuration);
     }
 
-    modifier inPhase(Phase p) {
+    modifier inPhase(AuctionPhase p) {
         require(phase == p, AuctionErrors.WRONG_PHASE);
         _;
     }
@@ -75,9 +75,9 @@ contract DomainAuction is IDomainAuction {
         uint32 startTime = now;
         uint32 finishTime = startTime + auctionDuration;
         uint32 splitTime = finishTime - AUCTION_CONFIRMATION_DURATION;
-        openTime = PhaseTime(startTime, splitTime);
-        confirmationTime = PhaseTime(splitTime, finishTime);
-        closeTime = PhaseTime(finishTime, domainExpiresAt);
+        openTime = AuctionPhaseTime(startTime, splitTime);
+        confirmationTime = AuctionPhaseTime(splitTime, finishTime);
+        closeTime = AuctionPhaseTime(finishTime, domainExpiresAt);
     }
 
     function getAddressNIC() public view override returns (address) {
@@ -92,20 +92,20 @@ contract DomainAuction is IDomainAuction {
         return domainExpiresAt;
     }
 
-    function getPhase() public override returns (Phase) {
+    function getPhase() public override returns (AuctionPhase) {
         update();
         return phase;
     }
 
-    function getOpenTime() public view override returns (PhaseTime) {
+    function getOpenTime() public view override returns (AuctionPhaseTime) {
         return openTime;
     }
 
-    function getConfirmationTime() public view override returns (PhaseTime) {
+    function getConfirmationTime() public view override returns (AuctionPhaseTime) {
         return confirmationTime;
     }
 
-    function getCloseTime() public view override returns (PhaseTime) {
+    function getCloseTime() public view override returns (AuctionPhaseTime) {
         return closeTime;
     }
 
@@ -113,7 +113,7 @@ contract DomainAuction is IDomainAuction {
         return bidsHashesCount;
     }
 
-    function makeBid(uint256 bidHash) public override inPhase(Phase.OPEN) {
+    function makeBid(uint256 bidHash) public override inPhase(AuctionPhase.OPEN) {
         update();
         require(!bidsHashes.exists(msg.sender), AuctionErrors.BID_ALREADY_MADE);
         require(msg.value >= AUCTION_DEPOSIT, AuctionErrors.NOT_ENOUGH_TOKENS);
@@ -124,7 +124,7 @@ contract DomainAuction is IDomainAuction {
         bidsHashesCount++;
     }
 
-    function removeBid() public override inPhase(Phase.OPEN) bidExists {
+    function removeBid() public override inPhase(AuctionPhase.OPEN) bidExists {
         update();
         tvm.accept();
         delete bidsHashes[msg.sender];
@@ -132,7 +132,7 @@ contract DomainAuction is IDomainAuction {
         msg.sender.transfer(AUCTION_DEPOSIT - AUCTION_FEE);
     }
 
-    function confirmBid(uint128 bidValue, uint256 salt) public override inPhase(Phase.CONFIRMATION) bidExists {
+    function confirmBid(uint128 bidValue, uint256 salt) public override inPhase(AuctionPhase.CONFIRMATION) bidExists {
         update();
         require(bidValue >= MIN_BID_VALUE, AuctionErrors.BID_TOO_LOW);
         require(!confirmedBids.exists(msg.sender), AuctionErrors.BID_ALREADY_CONFIRMED);
@@ -174,12 +174,12 @@ contract DomainAuction is IDomainAuction {
     }
 
     function update() public override {
-        if (phase == Phase.OPEN && now >= confirmationTime.startTime) {
+        if (phase == AuctionPhase.OPEN && now >= confirmationTime.startTime) {
             tvm.accept();
-            phase = Phase.CONFIRMATION;
-        } else if (phase == Phase.CONFIRMATION && now >= closeTime.startTime) {
+            phase = AuctionPhase.CONFIRMATION;
+        } else if (phase == AuctionPhase.CONFIRMATION && now >= closeTime.startTime) {
             tvm.accept();
-            phase = Phase.CLOSE;
+            phase = AuctionPhase.CLOSE;
             finish();
         }
     }

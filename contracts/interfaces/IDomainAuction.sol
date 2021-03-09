@@ -1,6 +1,6 @@
 pragma ton-solidity ^0.37.0;
 
-import {Phase, PhaseTime} from "../DeNSLib.sol";
+import {AuctionPhase, AuctionPhaseTime} from "../DeNSLib.sol";
 
 
 interface IDomainAuction {
@@ -11,13 +11,13 @@ interface IDomainAuction {
 
     function getDomainExpiresAt() external view returns (uint32);
 
-    function getPhase() external returns (Phase);
+    function getPhase() external returns (AuctionPhase);
 
-    function getOpenTime() external view returns (PhaseTime);
+    function getOpenTime() external view returns (AuctionPhaseTime);
 
-    function getConfirmationTime() external view returns (PhaseTime);
+    function getConfirmationTime() external view returns (AuctionPhaseTime);
 
-    function getCloseTime() external view returns (PhaseTime);
+    function getCloseTime() external view returns (AuctionPhaseTime);
 
     function getCurrentBidsCount() external view returns (uint64);
 

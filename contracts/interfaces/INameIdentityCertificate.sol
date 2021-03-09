@@ -3,7 +3,7 @@ import {WhoIsInfo, Records, RegistrationTypes} from "../DeNSLib.sol";
 
 interface INameIdentityCertificate {
 
-   function isAbleToRegister(uint128 requestHash) external view returns(bool, uint128, string);
+    function isAbleToRegister(uint128 requestHash) external view returns(bool, uint128, string);
 
     function getResolve(string domainName) external view returns (address certificate);
 
@@ -30,6 +30,18 @@ interface INameIdentityCertificate {
     function getExpiresAt() external view returns (uint32);
 
     function getOwner() external view returns (address);
+
+    function getInstantBuyPrice() external view returns (uint128);
+
+    function getInstantBuyMaxSecDuration() external view returns (uint32);
+
+    /*  Register name  */
+    function registerNameByOwner(string domainName, uint8 duration) external;
+
+    function registerNameByAuction(string domainName, uint8 durationInYears, uint256 bidHash) external;
+
+    function registerInstantName(string domainName, uint32 durationInSec) external;
+
 
     /*  Parent functions  */
     function updateCertificate(address newOwner, uint32 newExpiresAt) external returns(string, address, bool);

@@ -10,8 +10,8 @@ contract TesWallet {
         uint128 value,
         bool bounce,
         uint8 flags,
-        TvmCell payload) public view
-    {
+        TvmCell payload
+    ) public pure {
         tvm.accept();
         dest.transfer(value, bounce, flags, payload);
     }
