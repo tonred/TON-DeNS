@@ -33,8 +33,8 @@ tonWrapper._setupKeyPairs = setupKeyPairs;
     const domainAuction = await deployDeNSAuction(tonWrapper, migration);
 
     // await deployDeNSDebot(tonWrapper, migration);
-    // if (eval(process.env.IS_TESTING_ENV)){
-    //     await deployTestContracts(tonWrapper, migration)
-    // }
+    if (eval(process.env.IS_TESTING_ENV)){
+        await deployTestContracts(tonWrapper, migration)
+    }
     process.exit(0);
 })();
