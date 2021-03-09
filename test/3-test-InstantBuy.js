@@ -46,12 +46,18 @@ describe('Test Instant registration', async function () {
 
         before(async function () {
             await instantBuyDomain(rootCert, name, duration, value);
-            firstSubDomainAddr = await rootCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(name)});
+            firstSubDomainAddr = await rootCert.runLocal(
+                'getResolve',
+                {domainName: TONTestingSuite.utils.stringToBytesArray(name)}
+            );
             firstSubDomainCert = copyContract(NicContract);
             firstSubDomainCert.address = firstSubDomainAddr;
             logger.log(`Subdomain Certificate: ${firstSubDomainAddr}`);
             await instantBuyDomain(firstSubDomainCert, name, duration - 100, value);
-            secondSubDomainAddr = await firstSubDomainCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(name)});
+            secondSubDomainAddr = await firstSubDomainCert.runLocal(
+                'getResolve',
+                {domainName: TONTestingSuite.utils.stringToBytesArray(name)}
+            );
             secondSubDomainCert = copyContract(NicContract);
             secondSubDomainCert.address = secondSubDomainAddr;
             logger.log(`Sub-Subdomain Certificate: ${secondSubDomainAddr}`);
@@ -99,14 +105,20 @@ describe('Test Instant registration', async function () {
         });
         it('Check buy with wrong duration', async function () {
             await instantBuyDomain(secondSubDomainCert, name, duration + 100, value);
-            let addr = await secondSubDomainCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(name)});
+            let addr = await secondSubDomainCert.runLocal(
+                'getResolve',
+                {domainName: TONTestingSuite.utils.stringToBytesArray(name)}
+            );
             expect(await getAccountType(addr))
                 .to
                 .equal(0, 'Domain was expected not to be registered, but it is registered');
         });
         it('Check buy with low value', async function () {
             await instantBuyDomain(secondSubDomainCert, name, duration - 2000, '5');
-            let addr = await secondSubDomainCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(name)});
+            let addr = await secondSubDomainCert.runLocal(
+                'getResolve',
+                {domainName: TONTestingSuite.utils.stringToBytesArray(name)}
+            );
             expect(await getAccountType(addr))
                 .to
                 .equal(0, 'Domain was expected not to be registered, but it is registered');
@@ -114,7 +126,10 @@ describe('Test Instant registration', async function () {
         it('Check buy with wrong name', async function () {
             let wrong_name = 'test/test';
             await instantBuyDomain(secondSubDomainCert, wrong_name, duration - 2000, value);
-            let addr = await secondSubDomainCert.runLocal('getResolve', {domainName: TONTestingSuite.utils.stringToBytesArray(wrong_name)});
+            let addr = await secondSubDomainCert.runLocal(
+                'getResolve',
+                {domainName: TONTestingSuite.utils.stringToBytesArray(wrong_name)}
+            );
             expect(await getAccountType(addr))
                 .to
                 .equal(0, 'Domain was expected not to be registered, but it is registered');
