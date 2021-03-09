@@ -23,7 +23,8 @@ library AuctionErrors {
 
 
 contract DomainAuction is IDomainAuction {
-    uint32 constant AUCTION_CONFIRMATION_DURATION = 1 days;
+//    uint32 constant AUCTION_CONFIRMATION_DURATION = 1 days;
+    uint32 constant AUCTION_CONFIRMATION_DURATION = 30 seconds;
     uint128 constant AUCTION_DEPOSIT = 100 ton;
     uint128 constant AUCTION_FEE = 1 ton;
     uint128 constant MIN_BID_VALUE = 1 nanoton;
@@ -92,8 +93,7 @@ contract DomainAuction is IDomainAuction {
         return domainExpiresAt;
     }
 
-    function getPhase() public override returns (Phase) {
-        update();
+    function getPhase() public view override returns (Phase) {
         return phase;
     }
 
@@ -136,19 +136,14 @@ contract DomainAuction is IDomainAuction {
         update();
         require(bidValue >= MIN_BID_VALUE, AuctionErrors.BID_TOO_LOW);
         require(!confirmedBids.exists(msg.sender), AuctionErrors.BID_ALREADY_CONFIRMED);
-        uint256 bidHash = hash(bidValue, salt);
+        uint256 bidHash = calcHash(bidValue, salt);
         uint256 bidHashMemo = bidsHashes[msg.sender];
         require(bidHash == bidHashMemo, AuctionErrors.CONFIRMATION_HASH_NOT_MATCH_BID_HASH);
-        tvm.accept();
-        // todo really ?
+
         uint128 totalValue = msg.value + AUCTION_DEPOSIT;
         uint128 leaveValue = totalValue - bidValue - AUCTION_FEE;
         require(leaveValue >= 0, AuctionErrors.TOKEN_VALUE_LESS_THAN_BID);
-        if (leaveValue < 0) {
-            msg.sender.transfer(0, false, 64);
-            return;
-            // todo return ?!?!?!?!?!?!
-        } else if (leaveValue > 0) {
+        if (leaveValue > 0) {
             msg.sender.transfer(leaveValue);
         }
         confirmedBids[msg.sender] = true;
@@ -157,7 +152,7 @@ contract DomainAuction is IDomainAuction {
         updateResults(bid);
     }
 
-    function hash(uint128 bidValue, uint256 salt) private pure returns (uint256) {
+    function calcHash(uint128 bidValue, uint256 salt) public pure override returns (uint256) {
         TvmBuilder builder;
         builder.store(bidValue, salt);
         TvmCell cell = builder.toCell();
@@ -180,7 +175,7 @@ contract DomainAuction is IDomainAuction {
         } else if (phase == Phase.CONFIRMATION && now >= closeTime.startTime) {
             tvm.accept();
             phase = Phase.CLOSE;
-            finish();
+//            finish();
         }
     }
 
