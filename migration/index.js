@@ -4,7 +4,7 @@ const {setupKeyPairs} = require('./utils.js');
 const {deployDeNSRoot} = require("./1-deploy-DeNSRoot");
 const {deployDeNSDebot} = require("./2-deploy-DeNSDebot");
 const {deployTestContracts} = require("./3-deploy-TestContracts");
-// const {deployDomainAuction} = require("./3_deploy_DomainAuction");
+const {deployDeNSAuction} = require("./3-deploy-DomainAuction");
 
 const giverConfig = {
     address: process.env.GIVER_CONTRACT,

@@ -11,7 +11,7 @@ interface IDomainAuction {
 
     function getDomainExpiresAt() external view returns (uint32);
 
-    function getPhase() external returns (AuctionPhase);
+    function getPhase() external view returns (AuctionPhase);
 
     function getOpenTime() external view returns (AuctionPhaseTime);
 
@@ -27,6 +27,8 @@ interface IDomainAuction {
     function removeBid() external;
 
     function confirmBid(uint128 bidValue, uint256 salt) external;
+
+    function calcHash(uint128 bidValue, uint256 salt) external pure returns (uint256);
 
     function update() external;
 
