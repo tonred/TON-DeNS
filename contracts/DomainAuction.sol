@@ -1,4 +1,7 @@
 pragma ton-solidity ^0.37.0;
+pragma AbiHeader expire;
+pragma AbiHeader time;
+pragma AbiHeader pubkey;
 
 import "./interfaces/IDomainAuction.sol";
 import {Phase, PhaseTime} from "./DeNSLib.sol";

@@ -62,21 +62,21 @@ contract DeNSDebot is Debot {
     }
 
     function resolve(string domainValue, address parentDomain) public {
+        optional(uint256) pubkey;
         INameIdentityCertificate(parentDomain).getResolve{
-                abiVer: 2,
-                extMsg: true,
-                callbackId: tvm.functionId(resolveNext),
-                onErrorId: 0,
-                time: 0,
-                expire: 0,
-                sign: false
+            abiVer: 2,
+            extMsg: true,
+            sign: false,
+            pubkey: pubkey,
+            time: uint64(now),
+            expire: 0,
+            callbackId: tvm.functionId(resolveNext),
+            onErrorId: 0
         }(domainValue);
     }
 
     function resolveNext(address domain) public {
-        if (domain == address(0)){
-            Terminal.print(0, "Domain doesn't exist");
-        } else if(m_resolvableDomainSecondPart != "") {
+        if(m_resolvableDomainSecondPart != "") {
             setResolvableDomainParts(m_resolvableDomainSecondPart);
             resolve(m_resolvableDomainFirstPart, domain);
         } else {

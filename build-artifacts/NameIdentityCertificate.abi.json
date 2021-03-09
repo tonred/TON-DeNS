@@ -1,6 +1,6 @@
 {
 	"ABI version": 2,
-	"header": ["time"],
+	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
 			"name": "constructor",
@@ -261,7 +261,7 @@
 				{"name":"domainName","type":"bytes"}
 			],
 			"outputs": [
-				{"name":"certificate","type":"address"}
+				{"name":"value0","type":"address"}
 			]
 		},
 		{

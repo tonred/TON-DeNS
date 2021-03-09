@@ -1,4 +1,7 @@
 pragma ton-solidity ^0.37.0;
+pragma AbiHeader expire;
+pragma AbiHeader time;
+pragma AbiHeader pubkey;
 
 import "DomainBase.sol";
 import "interfaces/INameIdentityCertificate.sol";
@@ -353,9 +356,9 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
 
     // TODO: Move to Base contract after bug with static vars will be fixed
-    function getResolve(string domainName) public view override returns (address certificate){
+    function getResolve(string domainName) view public override returns (address){
         TvmCell state = buildNicStateInit(domainName);
-        certificate = address.makeAddrStd(0, tvm.hash(state));
+        return address.makeAddrStd(0, tvm.hash(state));
     }
 
     function getParent() public view override returns (address){
