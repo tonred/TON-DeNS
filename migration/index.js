@@ -30,7 +30,7 @@ tonWrapper._setupKeyPairs = setupKeyPairs;
     await deployDeNSRoot(tonWrapper, migration);
     // const domainAuction = await deployDomainAuction(tonWrapper, migration);
 
-    // await deployDeNSDebot(tonWrapper, migration);
+    await deployDeNSDebot(tonWrapper, migration);
     if (eval(process.env.IS_TESTING_ENV)){
         await deployTestContracts(tonWrapper, migration)
     }

@@ -44,8 +44,58 @@
 			]
 		},
 		{
-			"name": "setResult",
+			"name": "menuResolveDomain",
 			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "resolveDomain",
+			"inputs": [
+				{"name":"value","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setResolvableDomainParts",
+			"inputs": [
+				{"name":"value","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "resolve",
+			"inputs": [
+				{"name":"domainValue","type":"bytes"},
+				{"name":"parentDomain","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "resolveNext",
+			"inputs": [
+				{"name":"domain","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "menuWhois",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "whois",
+			"inputs": [
+				{"name":"value","type":"bytes"}
 			],
 			"outputs": [
 			]
