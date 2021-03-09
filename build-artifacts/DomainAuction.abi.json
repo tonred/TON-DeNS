@@ -1,0 +1,130 @@
+{
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"thisDomainExpiresAt","type":"uint32"},
+				{"name":"auctionDuration","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressNIC",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getRelativeDomainName",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "getDomainExpiresAt",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint32"}
+			]
+		},
+		{
+			"name": "getPhase",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint8"}
+			]
+		},
+		{
+			"name": "getOpenTime",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"startTime","type":"uint32"},{"name":"finishTime","type":"uint32"}],"name":"value0","type":"tuple"}
+			]
+		},
+		{
+			"name": "getConfirmationTime",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"startTime","type":"uint32"},{"name":"finishTime","type":"uint32"}],"name":"value0","type":"tuple"}
+			]
+		},
+		{
+			"name": "getCloseTime",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"startTime","type":"uint32"},{"name":"finishTime","type":"uint32"}],"name":"value0","type":"tuple"}
+			]
+		},
+		{
+			"name": "getCurrentBidsCount",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint64"}
+			]
+		},
+		{
+			"name": "makeBid",
+			"inputs": [
+				{"name":"bidHash","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "removeBid",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "confirmBid",
+			"inputs": [
+				{"name":"bidValue","type":"uint128"},
+				{"name":"salt","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "update",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		}
+	],
+	"data": [
+		{"key":1,"name":"addressNIC","type":"address"},
+		{"key":2,"name":"relativeDomainName","type":"bytes"}
+	],
+	"events": [
+		{
+			"name": "HistoryRecord",
+			"inputs": [
+				{"name":"auctionStartTime","type":"uint32"},
+				{"name":"auctionFinishTime","type":"uint32"},
+				{"name":"domainExpiresAt","type":"uint32"},
+				{"name":"bidsHashesCount","type":"uint64"},
+				{"name":"bidsCount","type":"uint64"},
+				{"name":"highestBid","type":"uint128"},
+				{"name":"sellBid","type":"uint128"}
+			],
+			"outputs": [
+			]
+		}
+	]
+}

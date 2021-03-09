@@ -1,0 +1,362 @@
+{
+	"ABI version": 2,
+	"header": ["time"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"expiresAt","type":"uint32"},
+				{"name":"registrationType","type":"uint8"},
+				{"name":"certificateCode","type":"cell"},
+				{"name":"auctionCode","type":"cell"},
+				{"name":"participantStorageCode","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddress",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getAdnlAddress",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "getTextRecords",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes[]"}
+			]
+		},
+		{
+			"name": "getRecords",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"A","type":"address"},{"name":"ADNL","type":"bytes"},{"name":"TXT","type":"bytes[]"}],"name":"value0","type":"tuple"}
+			]
+		},
+		{
+			"name": "getWhoIs",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"parent","type":"address"},{"name":"path","type":"bytes"},{"name":"name","type":"bytes"},{"name":"owner","type":"address"},{"name":"expiresAt","type":"uint32"},{"components":[{"name":"A","type":"address"},{"name":"ADNL","type":"bytes"},{"name":"TXT","type":"bytes[]"}],"name":"records","type":"tuple"}],"name":"value0","type":"tuple"}
+			]
+		},
+		{
+			"name": "getRegistrationType",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint8"}
+			]
+		},
+		{
+			"name": "getExpiresAt",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint32"}
+			]
+		},
+		{
+			"name": "getOwner",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getInstantBuyPrice",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "getInstantBuyMaxSecDuration",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"uint32"}
+			]
+		},
+		{
+			"name": "registerNameByOwner",
+			"inputs": [
+				{"name":"domainName","type":"bytes"},
+				{"name":"duration","type":"uint8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "registerNameByAuction",
+			"inputs": [
+				{"name":"domainName","type":"bytes"},
+				{"name":"durationInYears","type":"uint8"},
+				{"name":"bidHash","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "registerInstantName",
+			"inputs": [
+				{"name":"domainName","type":"bytes"},
+				{"name":"durationInSec","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onStoragePrunePayToOwner",
+			"inputs": [
+				{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"storageDataPK","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onStoragePruneReturnFunds",
+			"inputs": [
+				{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"storageDataPK","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onUpdateChildCert",
+			"inputs": [
+				{"name":"domain","type":"bytes"},
+				{"name":"sender","type":"address"},
+				{"name":"successful","type":"bool"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onStorageReadResponse",
+			"inputs": [
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"}],"name":"storageData","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "isAbleToRegister",
+			"inputs": [
+				{"name":"requestHash","type":"uint128"}
+			],
+			"outputs": [
+				{"name":"value0","type":"bool"},
+				{"name":"value1","type":"uint128"},
+				{"name":"value2","type":"bytes"}
+			]
+		},
+		{
+			"name": "isAbleToRegisterCallback",
+			"inputs": [
+				{"name":"isAvailable","type":"bool"},
+				{"name":"requestHash","type":"uint128"},
+				{"name":"domainName","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "updateCertificate",
+			"inputs": [
+				{"name":"newOwner","type":"address"},
+				{"name":"newExpiresAt","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"},
+				{"name":"value1","type":"address"},
+				{"name":"value2","type":"bool"}
+			]
+		},
+		{
+			"name": "setOwner",
+			"inputs": [
+				{"name":"newOwner","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setRegistrationType",
+			"inputs": [
+				{"name":"newRegistrationType","type":"uint8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setInstantBuyPrice",
+			"inputs": [
+				{"name":"instantBuyPrice","type":"uint128"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"}
+			]
+		},
+		{
+			"name": "setInstantBuyMaxSecDuration",
+			"inputs": [
+				{"name":"instantBuyMaxSecDuration","type":"uint32"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint32"}
+			]
+		},
+		{
+			"name": "setAddress",
+			"inputs": [
+				{"name":"newAddress","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setAdnlAddress",
+			"inputs": [
+				{"name":"newAdnlAddress","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "addTextRecord",
+			"inputs": [
+				{"name":"newTextRecord","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "removeTextRecordByIndex",
+			"inputs": [
+				{"name":"index","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getResolve",
+			"inputs": [
+				{"name":"domainName","type":"bytes"}
+			],
+			"outputs": [
+				{"name":"certificate","type":"address"}
+			]
+		},
+		{
+			"name": "getParent",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getPath",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "getName",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"bytes"}
+			]
+		},
+		{
+			"name": "getCertificateCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"cell"}
+			]
+		},
+		{
+			"name": "getAuctionCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"cell"}
+			]
+		}
+	],
+	"data": [
+		{"key":1,"name":"_parent","type":"address"},
+		{"key":2,"name":"_path","type":"bytes"},
+		{"key":3,"name":"_name","type":"bytes"}
+	],
+	"events": [
+		{
+			"name": "UpdateCertificate",
+			"inputs": [
+				{"name":"previousOwner","type":"address"},
+				{"name":"newOwner","type":"address"},
+				{"name":"previousExpiresAt","type":"uint32"},
+				{"name":"newExpiresAt","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "UpdateOwner",
+			"inputs": [
+				{"name":"previousOwner","type":"address"},
+				{"name":"newOwner","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "UpdateRegistrationType",
+			"inputs": [
+				{"name":"previousRegistrationType","type":"uint8"},
+				{"name":"newRegistrationType","type":"uint8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "UpdateRecordAddress",
+			"inputs": [
+				{"name":"previousRecordAddress","type":"address"},
+				{"name":"newRecordAddress","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "UpdateADNLAddress",
+			"inputs": [
+				{"name":"previousADNLAddress","type":"bytes"},
+				{"name":"newADNLAddress","type":"bytes"}
+			],
+			"outputs": [
+			]
+		}
+	]
+}
