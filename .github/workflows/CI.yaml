@@ -11,6 +11,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    services:
+      nodese:
+        image: tonlabs/local-node
+        ports:
+          - 80:80
+        env:
+          USER_AGREEMENT: yes
+    
     steps:
       - uses: actions/checkout@v2
       - uses: ton-actions/setup-tools@v2
@@ -37,13 +46,6 @@ jobs:
           sed 's/STDLIB_PATH=stdlib_sol.tvm/STDLIB_PATH=${TVM_LINKER_LIB_PATH}/g' .env.dist > .env
           make build
           make clean-tmp   
-        
-      - name: Install Node Se
-        run: |
-          docker run -d --name local-node -e USER_AGREEMENT=yes -p80:80 tonlabs/local-node
-      
-      - name: Check local node
-        run: docker ps
       
       - name: Run magration to local node
         run: make deploy
