@@ -75,6 +75,9 @@ describe('Test DeNS Root', async function () {
                 expect((await ReservedNameIdentityCertificate.runLocal('getRegistrationType')).toNumber())
                     .to
                     .equal(domain.registrationType, 'Wrong registration type in top-level NIC');
+                expect(await ReservedNameIdentityCertificate.runLocal('getOwner'))
+                    .to
+                    .equal(domain.owner, 'Wrong owner in top-level NIC');
             });
         })
     });

@@ -7,6 +7,7 @@ contract CertificateDeployable{
     string static _path;
     string static _name;
     constructor(
+        address owner,
         uint32 expiresAt,
         RegistrationTypes registrationType,
         TvmCell certificateCode,

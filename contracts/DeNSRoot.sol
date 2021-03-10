@@ -15,6 +15,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
 
 
     struct ReservedDomain {
+        address owner;
         string domainName;
         RegistrationTypes registrationType;
     }
@@ -38,7 +39,13 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         _participantStorageCode = participantStorageCode;
 
         for (uint i = 0; i < reservedDomains.length; i++) {
-            deployCertificate(reservedDomains[i].domainName, reservedDomains[i].registrationType, 0xFFFFFFFF, 10 ton);
+            deployCertificate(
+                reservedDomains[i].owner,
+                reservedDomains[i].domainName,
+                reservedDomains[i].registrationType,
+                0xFFFFFFFF,
+                10 ton
+            );
         }
     }
 
@@ -80,6 +87,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
     }
 
     function deployCertificate(
+        address owner,
         string domainName,
         RegistrationTypes registrationType,
         uint32 expiresAt,
@@ -89,8 +97,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         return new CertificateDeployable{
             stateInit: state,
             value: value
-        }(expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
-    // todo add address owner and other params
+        }(owner, expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
     }
 
 

@@ -64,6 +64,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
 
     constructor(
+        address owner,
         uint32 expiresAt,
         RegistrationTypes registrationType,
         TvmCell certificateCode,
@@ -75,6 +76,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         _auctionCode = auctionCode;
         _participantStorageCode = participantStorageCode;
 
+        _owner = owner;
         _registrationType = registrationType;
         _expiresAt = expiresAt;
 
@@ -431,6 +433,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
     }
 
     function deployCertificate(
+        address owner,
         string domainName,
         RegistrationTypes registrationType,
         uint32 expiresAt,
@@ -440,6 +443,6 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         return new CertificateDeployable{
             stateInit: state,
             value: value
-        }(expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+        }(owner, expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
     }
 }

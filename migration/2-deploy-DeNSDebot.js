@@ -1,4 +1,6 @@
+require('dotenv').config({path: './.env'});
 const TONTestingSuite = require("ton-testing-suite");
+const {loadTonWrapper} = require("./utils");
 const {loadDeNSRootContract, loadDeNSDebotContract} = require("./loadContracts");
 
 
@@ -19,6 +21,16 @@ async function deployDeNSDebot(tonWrapper, migration) {
     });
     return DeNSDebotContract
 
+}
+
+if (require.main === module) {
+    (async () => {
+        const _tonWrapper = await loadTonWrapper();
+        await _tonWrapper.setup(1);
+        const _migration = new TONTestingSuite.Migration(_tonWrapper);
+        await deployDeNSDebot(_tonWrapper, _migration)
+        process.exit(0);
+    })();
 }
 
 module.exports = {

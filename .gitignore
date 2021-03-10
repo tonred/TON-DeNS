@@ -15,3 +15,4 @@ migration-log.json
 
 tonos-cli.conf.json
 debot_err.log
+*.keys.json

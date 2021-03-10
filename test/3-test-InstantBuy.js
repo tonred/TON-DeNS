@@ -113,6 +113,16 @@ describe('Test Instant registration', async function () {
                 .to
                 .equal(0, 'Domain was expected not to be registered, but it is registered');
         });
+        it('Check buy with too long duration', async function () {
+            await instantBuyDomain(secondSubDomainCert, name, duration * 7 * 5, value);
+            let addr = await secondSubDomainCert.runLocal(
+                'getResolve',
+                {domainName: TONTestingSuite.utils.stringToBytesArray(name)}
+            );
+            expect(await getAccountType(addr))
+                .to
+                .equal(0, 'Domain was expected not to be registered, but it is registered');
+        });
         it('Check buy with low value', async function () {
             await instantBuyDomain(secondSubDomainCert, name, duration - 2000, '5');
             let addr = await secondSubDomainCert.runLocal(

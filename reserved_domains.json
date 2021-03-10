@@ -1,0 +1,17 @@
+[
+  {
+    "domainName": "os",
+    "registrationType": 1,
+    "owner": "0:b453e53ae4ae0d8104592c1127298aecb637bb70a0bcd56322cf7731a66ce1d2"
+  },
+  {
+    "domainName": "dev",
+    "registrationType": 1,
+    "owner": "0:b453e53ae4ae0d8104592c1127298aecb637bb70a0bcd56322cf7731a66ce1d2"
+  },
+  {
+    "domainName": "🤗",
+    "registrationType": 2,
+    "owner": "0:b453e53ae4ae0d8104592c1127298aecb637bb70a0bcd56322cf7731a66ce1d2"
+  }
+]
