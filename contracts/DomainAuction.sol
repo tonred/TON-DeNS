@@ -23,8 +23,7 @@ library AuctionErrors {
 
 
 contract DomainAuction is IDomainAuction {
-//    uint32 constant AUCTION_CONFIRMATION_DURATION = 1 days;
-    uint32 constant AUCTION_CONFIRMATION_DURATION = 30 seconds;
+    uint32 constant AUCTION_CONFIRMATION_DURATION = 1 days;
     uint128 constant AUCTION_DEPOSIT = 100 ton;
     uint128 constant AUCTION_FEE = 1 ton;
     uint128 constant MIN_BID_VALUE = 1 nanoton;
@@ -161,11 +160,21 @@ contract DomainAuction is IDomainAuction {
 
     function updateResults(Bid bid) private {
         if (bid.value > highestBid.value) {
-            secondHighestBid = highestBid;
+            if (highestBid.owner != address(0)) {  // highest bid exists
+                returnBid(highestBid);
+                secondHighestBid = highestBid;
+            }
             highestBid = bid;
         } else if (bid.value > secondHighestBid.value) {
+            returnBid(bid);
             secondHighestBid = highestBid;
+        } else {
+            returnBid(bid);
         }
+    }
+
+    function returnBid(Bid bid) private {
+        bid.owner.transfer(bid.value);
     }
 
     function update() public override {
@@ -175,27 +184,27 @@ contract DomainAuction is IDomainAuction {
         } else if (phase == Phase.CONFIRMATION && now >= closeTime.startTime) {
             tvm.accept();
             phase = Phase.CLOSE;
-//            finish();
+            finish();
         }
     }
 
     function finish() private {
-        address owner = address(0);
+        address winner = address(0);
         uint128 cost = 0;
-        if (highestBid.owner == address(0)) {// todo ? check default struct value
+        if (highestBid.owner == address(0)) {
             // no winner
-            owner = address(0);
-            cost = 0;
-        } else if (secondHighestBid.owner == address(0)) {// todo ? check default struct value
+            // todo callback to addressNIC with no winner ???
+        } else if (secondHighestBid.owner == address(0)) {
             // one winner (one bid)
-            owner = highestBid.owner;
+            winner = highestBid.owner;
             cost = highestBid.value;
-            // todo call + send all
+            // todo callback to addressNIC with winner
         } else {
             // one winner (many bids)
-            owner = highestBid.owner;
+            highestBid.owner.transfer(highestBid.value - secondHighestBid.value);
+            winner = highestBid.owner;
             cost = secondHighestBid.value;
-            // todo call + send all
+            // todo callback to addressNIC with winner
         }
         emit HistoryRecord(
             openTime.startTime,
@@ -206,7 +215,7 @@ contract DomainAuction is IDomainAuction {
             highestBid.value,
             cost
         );
-        // todo manage money
+        // todo send all tokens to NIC/Root
     }
 
 }

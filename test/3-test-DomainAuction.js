@@ -6,6 +6,7 @@ const {loadDeNSAuctionContract, loadTestWalletContract} = require("../migration/
 const {loadTestingEnv} = require("./utils");
 
 const {ARTIFACTS_PATH, ALIAS, tonWrapper} = loadTestingEnv();
+const SECONDS_IN_DAY = 24 * 60 * 60;
 
 let DomainAuction;
 let TestWalletContract;
@@ -51,12 +52,12 @@ describe('Test Domain Auction', async function () {
         it('Check open time duration', async function () {
             expect(openTime.finishTime - openTime.startTime)
                 .to
-                .equal(60 - 30, 'Wrong open time');
+                .equal(2 * SECONDS_IN_DAY - SECONDS_IN_DAY, 'Wrong open time');
         });
         it('Check confirmation time duration', async function () {
             expect(openTime.finishTime - openTime.startTime)
                 .to
-                .equal(30, 'Wrong confirmation time');
+                .equal(SECONDS_IN_DAY, 'Wrong confirmation time');
         });
         it('Check close time', async function () {
             expect(closeTime.finishTime.toString())
