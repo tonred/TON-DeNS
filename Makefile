@@ -26,10 +26,6 @@ dev: build
 	npm run migrate
 	make tests
 
-start-debot:
-	@echo "start-debot"
-	/Users/pavel/Downloads/tonos-cli\ 3  debot fetch `cat migration-log.json | jq -r '.DeBotDeNS.address'`
-
 deploy: deploy-main deploy-tests
 	@echo "Deploying all contracts"
 
