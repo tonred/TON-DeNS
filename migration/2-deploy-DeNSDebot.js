@@ -9,17 +9,13 @@ async function deployDeNSDebot(tonWrapper, migration) {
     await DeNSRootContract.loadMigration(process.env.ALIAS);
     await migration.deploy({
         contract: DeNSDebotContract,
-        constructorParams: {
-            debotAbi: TONTestingSuite.utils.stringToBytesArray(JSON.stringify(DeNSDebotContract.abi)),
-            targetAbi: TONTestingSuite.utils.stringToBytesArray(JSON.stringify(DeNSCertContract.abi)),
-            targetAddress: DeNSRootContract.address,
-        },
+        constructorParams: {},
         initParams: {},
         initialBalance: TONTestingSuite.utils.convertCrystal('11', 'nano'),
         alias: 'DeBot' + process.env.ALIAS,
     });
-    return DeNSDebotContract
-
+    await DeNSDebotContract.run('setABI', {dabi: TONTestingSuite.utils.stringToBytesArray(JSON.stringify(DeNSDebotContract.abi))});
+    return DeNSDebotContract;
 }
 
 module.exports = {
