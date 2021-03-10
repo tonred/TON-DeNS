@@ -5,57 +5,81 @@ ifndef VERBOSE
 endif
 
 help:
-	@echo "build - compile all contracts"
-	@echo "clean - clear build artifacts except ABI's"
-	@echo "deploy-contracts - deploy DeNS contracts"
-	@echo "deploy-debot - deploy DeBot contract"
+	@echo "build - Compile all contracts"
 	@echo "deploy - deploy all contracts"
 	@echo "tests - test contracts"
+	@echo "clean - clear build artifacts except ABI's"
+	@echo "clean-tmp - clear temp build artifacts except tvc and ABI's"
+	@echo "build-root - Compile DeNS root contract"
+	@echo "build-cert - Compile DeNS NIC(Name Identity Certificate)"
+	@echo "build-debot - Compile DeNS DeBot"
+	@echo "build-auction - Compile DeNS Auction"
+	@echo "build-participant-storage - Compile DeNS Participant storage"
+	@echo "build-test - Compile DeNS Tests contracts"
+	@echo "deploy-main - Deploy DeNS contracts needed for work"
+	@echo "deploy-root - Deploy Root contract"
+	@echo "deploy-debot - Deploy DeBot contract"
+	@echo "deploy-tests - deploy Tests contract"
 
-deploy: deploy-contracts deploy-debot
-	@echo "deploy-all"
+dev: build
+	@echo "dev"
 	npm run migrate
+	make tests
 
-deploy-contracts:
-	@echo "deploy-contracts:"
+start-debot:
+	@echo "start-debot"
+	/Users/pavel/Downloads/tonos-cli\ 3  debot fetch `cat migration-log.json | jq -r '.DeBotDeNS.address'`
+
+deploy: deploy-main deploy-tests
+	@echo "Deploying all contracts"
+
+deploy-main: deploy-root deploy-debot deploy-tests
+	@echo "Deploying contracts needed for work"
+
+deploy-root:
+	@echo "Deploying Root contract"
+	node migration/1-deploy-DeNSRoot.js
 
 deploy-debot:
-	@echo "deploy-debot"
+	@echo "Deploying DeBot contract"
+	node migration/2-deploy-DeNSDebot.js
 
-build: build-dns-root build-dns-cert build-dns-debot build-dns-auction build-dns-test build-dns-participant-storage
-	@echo "build"
+deploy-tests:
+	@echo "Deploying Tests contract"
+	node migration/3-deploy-TestContracts.js
 
-build-dns-root:
-	@echo "build-dns-root"
+build: build-root build-cert build-debot build-auction build-test build-participant-storage
+	@echo "Compiling all contracts"
+
+build-root:
+	@echo "Compiling DeNS Root"
 	$(call compile_all,$(CONTRACTS_PATH),$(DNS_ROOT_CONTRACT))
 
-build-dns-cert:
-	@echo "build-dns-cert"
+build-cert:
+	@echo "Compiling DeNS NIC"
 	$(call compile_all,$(CONTRACTS_PATH),$(DNS_NIC_CONTRACT))
 
-build-dns-debot:
-	@echo "build-dns-debot"
+build-debot:
+	@echo "Compiling DeNS DeBot"
 	$(call compile_all,$(DEBOT_PATH),$(DNS_DEBOT_CONTRACT))
 
-build-dns-auction:
-	@echo "build-dns-auction"
+build-auction:
+	@echo "Compiling DeNS Auction"
 	$(call compile_all,$(CONTRACTS_PATH),$(DNS_AUCTION_CONTRACT))
 
-build-dns-participant-storage:
-	@echo "build-dns-participant-storage"
+build-participant-storage:
+	@echo "Compiling DeNS Participant storage"
 	$(call compile_all,$(CONTRACTS_PATH),$(DNS_PARTICIPANT_STORAGE_CONTRACT))
 
-
-build-dns-test:
-	@echo "build-dns-test"
+build-test:
+	@echo "Compiling DeNS Tests"
 	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_ROOT_CONTRACT))
 	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_NIC_CONTRACT))
 	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_DNS_AUCTION_CONTRACT))
 	$(call compile_all,$(TEST_CONTRACTS_PATH),$(TEST_WALLET_CONTRACT))
 
-
 tests:
-	@echo "tests"
+	@echo "Running tests"
 	npm run test
 
 setup:
@@ -82,7 +106,7 @@ define compile_all
 endef
 
 define compile_sol
-	$(SOLC_BIN) $(1)/$(2).sol
+	$(SOLC_BIN) $(1)/$(2).sol --tvm-optimize
 	mv $(1)/$(2).code $(ARTIFACTS_PATH)
 	mv $(1)/$(2).abi.json $(ARTIFACTS_PATH)
 endef
