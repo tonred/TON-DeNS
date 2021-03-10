@@ -1,14 +1,18 @@
 library stringUtils {
-    function splitBySlash(string domainName) public returns (string, string){
+    function splitBySlash(string value) public returns (string, string){
+        return split(, 0x2F);
+    }
+
+    function split(string value, byte separator) public returns (string, string){
         TvmBuilder bFirstHalf;
         TvmBuilder bSecondHalf;
         bool isSlashFound = false;
-        bytes domainNameBytes = bytes(domainName);
-        uint256 domainNameLength = domainNameBytes.length;
-        for(uint8 i = 0; i < domainNameLength; i++){
-            byte char = domainNameBytes[i];
+        bytes stringBytes = bytes(value);
+        uint256 stringLength = stringBytes.length;
+        for(uint8 i = 0; i < stringLength; i++){
+            byte char = stringBytes[i];
             if (!isSlashFound){
-                if (char == 0x2F) isSlashFound = true;
+                if (char == separator) isSlashFound = true;
                 else bFirstHalf.store(char);
             }
             else bSecondHalf.store(char);
