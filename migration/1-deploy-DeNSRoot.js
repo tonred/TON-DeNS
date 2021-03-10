@@ -12,7 +12,8 @@ async function deployDeNSRoot(tonWrapper, migration) {
     const DeNSCertContract = await loadDeNSCertContract(tonWrapper);
     const DeNSAuctionContract = await loadDeNSAuctionContract(tonWrapper);
     const ParticipantStorageContract = await loadParticipantStorageContract(tonWrapper);
-    const reservedDomains = JSON.parse(process.env.RESERVED_DOMAINS).map(i => ({
+    const reservedDomains = TONTestingSuite.utils.loadJSONFromFile(process.env.RESERVED_DOMAINS).map(i => ({
+        owner: i.owner,
         domainName: TONTestingSuite.utils.stringToBytesArray(i.domainName),
         registrationType: i.registrationType
     }));

@@ -55,7 +55,7 @@ describe('Test DeNS Root', async function () {
     });
 
     describe('Check Reserved(top-level) domains', async function () {
-        const reservedDomains = JSON.parse(process.env.RESERVED_DOMAINS);
+        const reservedDomains = TONTestingSuite.utils.loadJSONFromFile(process.env.RESERVED_DOMAINS);
         reservedDomains.map(async (domain) => {
             it(`Check "${domain.domainName}" Domain`, async function () {
                 let domainAddress = await DeNSRootContract.runLocal('getResolve', {
