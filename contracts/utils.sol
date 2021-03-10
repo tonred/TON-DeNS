@@ -1,6 +1,6 @@
 library stringUtils {
     function splitBySlash(string value) public returns (string, string){
-        return split(, 0x2F);
+        return split(value, 0x2F);
     }
 
     function split(string value, byte separator) public returns (string, string){
