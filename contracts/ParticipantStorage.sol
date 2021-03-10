@@ -1,4 +1,4 @@
-pragma ton-solidity ^0.37.0;
+pragma ton-solidity >=0.37.0;
 
 struct ParticipantStoragePK{
     address account;

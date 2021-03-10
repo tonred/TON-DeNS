@@ -1,4 +1,4 @@
-pragma ton-solidity ^0.37.0;
+pragma ton-solidity >=0.37.0;
 import {WhoIsInfo, Records, RegistrationTypes} from "../DeNSLib.sol";
 
 interface INameIdentityCertificate {

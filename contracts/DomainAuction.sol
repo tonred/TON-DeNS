@@ -1,4 +1,4 @@
-pragma ton-solidity ^0.37.0;
+pragma ton-solidity >=0.37.0;
 
 import "./interfaces/IDomainAuction.sol";
 import {AuctionPhase, AuctionPhaseTime} from "./DeNSLib.sol";
