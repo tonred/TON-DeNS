@@ -15,6 +15,7 @@ help:
 	@echo "build-debot - Compile DeNS DeBot"
 	@echo "build-auction - Compile DeNS Auction"
 	@echo "build-participant-storage - Compile DeNS Participant storage"
+	@echo "build-proposal - Compile DeNS Participant storage"
 	@echo "build-test - Compile DeNS Tests contracts"
 	@echo "deploy-main - Deploy DeNS contracts needed for work"
 	@echo "deploy-root - Deploy Root contract"
@@ -25,6 +26,7 @@ dev: build
 	@echo "dev"
 	npm run migrate
 	make tests
+debot: build-debot deploy-debot start-debot
 
 deploy: deploy-main deploy-tests
 	@echo "Deploying all contracts"
@@ -44,7 +46,7 @@ deploy-tests:
 	@echo "Deploying Tests contract"
 	node migration/3-deploy-TestContracts.js
 
-build: build-root build-cert build-debot build-auction build-test build-participant-storage
+build: build-root build-cert build-debot build-auction build-test build-participant-storage build-proposal
 	@echo "Compiling all contracts"
 
 build-root:
@@ -66,6 +68,10 @@ build-auction:
 build-participant-storage:
 	@echo "Compiling DeNS Participant storage"
 	$(call compile_all,$(CONTRACTS_PATH),$(DNS_PARTICIPANT_STORAGE_CONTRACT))
+
+build-proposal:
+	@echo "Compiling DeNS Proposal"
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_PROPOSAL_CONTRACT))
 
 build-test:
 	@echo "Compiling DeNS Tests"

@@ -5,7 +5,8 @@ const {
     loadDeNSRootContract,
     loadDeNSCertContract,
     loadDeNSAuctionContract,
-    loadParticipantStorageContract
+    loadParticipantStorageContract,
+    loadDeNsProposalContract
 } = require("./loadContracts");
 
 
@@ -14,6 +15,7 @@ async function deployDeNSRoot(tonWrapper, migration) {
     const DeNSCertContract = await loadDeNSCertContract(tonWrapper);
     const DeNSAuctionContract = await loadDeNSAuctionContract(tonWrapper);
     const ParticipantStorageContract = await loadParticipantStorageContract(tonWrapper);
+    const DeNsProposalContract = await loadDeNsProposalContract(tonWrapper);
     const reservedDomains = TONTestingSuite.utils.loadJSONFromFile(process.env.RESERVED_DOMAINS).map(i => ({
         owner: i.owner,
         domainName: TONTestingSuite.utils.stringToBytesArray(i.domainName),
@@ -25,10 +27,12 @@ async function deployDeNSRoot(tonWrapper, migration) {
             certificateCode: DeNSCertContract.code,
             auctionCode: DeNSAuctionContract.code,
             participantStorageCode: ParticipantStorageContract.code,
-            reservedDomains
+            proposalCode: DeNsProposalContract.code,
+            reservedDomains: reservedDomains,
+            reservedDomainInitialValue: TONTestingSuite.utils.convertCrystal('10', 'nano')
         },
         initParams: {
-            _parent: process.env.SMV_ADDRESS,
+            _parent: process.env.ROOT_OWNER_ADDRESS,
             _path: '',
             _name: '',
         },

@@ -8,7 +8,38 @@
 				{"name":"certificateCode","type":"cell"},
 				{"name":"auctionCode","type":"cell"},
 				{"name":"participantStorageCode","type":"cell"},
-				{"components":[{"name":"domainName","type":"bytes"},{"name":"registrationType","type":"uint8"}],"name":"reservedDomains","type":"tuple[]"}
+				{"name":"proposalCode","type":"cell"},
+				{"components":[{"name":"owner","type":"address"},{"name":"domainName","type":"bytes"},{"name":"registrationType","type":"uint8"}],"name":"reservedDomains","type":"tuple[]"},
+				{"name":"reservedDomainInitialValue","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "createDomainProposal",
+			"inputs": [
+				{"name":"name","type":"bytes"},
+				{"name":"owner","type":"address"},
+				{"name":"registrationType","type":"uint8"},
+				{"name":"smv","type":"address"},
+				{"name":"totalVotes","type":"uint32"},
+				{"name":"start","type":"uint32"},
+				{"name":"end","type":"uint32"},
+				{"name":"description","type":"bytes"},
+				{"name":"text","type":"bytes"},
+				{"name":"model","type":"uint8"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onProposalCompletion",
+			"inputs": [
+				{"name":"name","type":"bytes"},
+				{"name":"smv","type":"address"},
+				{"name":"result","type":"bool"},
+				{"name":"owner","type":"address"},
+				{"name":"registrationType","type":"uint8"}
 			],
 			"outputs": [
 			]
@@ -60,6 +91,22 @@
 			],
 			"outputs": [
 				{"name":"value0","type":"cell"}
+			]
+		},
+		{
+			"name": "_participantStorageCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_participantStorageCode","type":"cell"}
+			]
+		},
+		{
+			"name": "_proposalCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"_proposalCode","type":"cell"}
 			]
 		}
 	],

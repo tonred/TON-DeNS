@@ -2,6 +2,7 @@ pragma ton-solidity >=0.37.0;
 
 import 'interfaces/IDeNSRoot.sol';
 import 'DomainBase.sol';
+import 'DeNsProposal.sol';
 import {RegistrationTypes} from "DeNSLib.sol";
 import {CertificateDeployable} from "./AbstractNameIdentityCertificate.sol";
 
@@ -11,7 +12,8 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
     string static _path;
     string static _name;
 
-    TvmCell _participantStorageCode;
+    TvmCell public _participantStorageCode;
+    TvmCell public _proposalCode;
 
 
     struct ReservedDomain {
@@ -29,7 +31,9 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         TvmCell certificateCode,
         TvmCell auctionCode,
         TvmCell participantStorageCode,
-        ReservedDomain[] reservedDomains
+        TvmCell proposalCode,
+        ReservedDomain[] reservedDomains,
+        uint128 reservedDomainInitialValue
     ) public {
     // TODO check message from owner;
         tvm.accept();
@@ -37,6 +41,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         _certificateCode = certificateCode;
         _auctionCode = auctionCode;
         _participantStorageCode = participantStorageCode;
+        _proposalCode = proposalCode;
 
         for (uint i = 0; i < reservedDomains.length; i++) {
             deployCertificate(
@@ -44,9 +49,65 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
                 reservedDomains[i].domainName,
                 reservedDomains[i].registrationType,
                 0xFFFFFFFF,
-                10 ton
+                reservedDomainInitialValue
             );
         }
+    }
+
+    function createDomainProposal(
+        string name,
+        address owner,
+        RegistrationTypes registrationType,
+        address smv,
+        uint32 totalVotes,
+        uint32 start,
+        uint32 end,
+        string description,
+        string text,
+        VoteCountModel model
+    ) public onlyParent {
+        tvm.rawReserve(address(this).balance - msg.value, 2);
+        TvmCell proposalState = buildProposalStateInit(name, smv);
+        new DeNsProposal{
+            stateInit: proposalState,
+            value: 0,
+            flag: 128
+        }(owner, registrationType, totalVotes, start, end, description, text, model);
+    }
+
+    function onProposalCompletion(
+        string name,
+        address smv,
+        bool result,
+        address owner,
+        RegistrationTypes registrationType
+    ) public {
+        TvmCell proposalState = buildProposalStateInit(name, smv);
+        require(msg.sender == address.makeAddrStd(0, tvm.hash(proposalState)), DeNsErrors.IS_NOT_PROPOSAL);
+        tvm.rawReserve(address(this).balance - msg.value, 2);
+        if (result) {
+            TvmCell state = buildNicStateInit(name);
+            new CertificateDeployable{
+                    stateInit: state,
+                    value: 0,
+                    flag: 128
+            }(owner, 0xFFFFFFFF, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+            return;
+        }
+        _parent.transfer({value: 0, flag: 128});
+
+    }
+
+    function buildProposalStateInit(string name, address smv) private view returns (TvmCell) {
+        return tvm.buildStateInit({
+            contr: DeNsProposal,
+            varInit: {
+                _root: address(this),
+                _smv: smv,
+                _name: name
+            },
+            code: _proposalCode
+        });
     }
 
     // TODO: Move to Base contract after bug with static vars will be fixed in SOLC

@@ -30,6 +30,8 @@ library DeNsErrors {
     uint constant IS_NOT_ROOT = 103;
     uint constant IS_NOT_SUBDOMAIN = 104;
     uint constant IS_NOT_STORAGE = 105;
+    uint constant IS_NOT_SMV = 106;
+    uint constant IS_NOT_PROPOSAL = 106;
 
     uint constant INVALID_DOMAIN_NAME = 110;
 

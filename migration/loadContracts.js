@@ -22,6 +22,9 @@ module.exports = {
     loadParticipantStorageContract: async function (tw) {
         return await loadContract(tw, process.env.DNS_PARTICIPANT_STORAGE_CONTRACT);
     },
+    loadDeNsProposalContract: async function (tw) {
+        return await loadContract(tw, process.env.DNS_PROPOSAL_CONTRACT);
+    },
     loadTestWalletContract: async function (tw) {
         return await loadContract(tw, process.env.TEST_WALLET_CONTRACT);
     },
