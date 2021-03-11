@@ -6,7 +6,6 @@
 			"name": "constructor",
 			"inputs": [
 				{"name":"debotAbi","type":"bytes"},
-				{"name":"targetAbi","type":"bytes"},
 				{"name":"targetAddress","type":"address"}
 			],
 			"outputs": [
@@ -44,7 +43,109 @@
 			]
 		},
 		{
-			"name": "setResult",
+			"name": "resolveSplit",
+			"inputs": [
+				{"name":"domain","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "resolve",
+			"inputs": [
+				{"name":"parentDomain","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "resolveCurrent",
+			"inputs": [
+				{"name":"parentDomain","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "resolveError",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressMenu",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressStart",
+			"inputs": [
+				{"name":"value","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddress",
+			"inputs": [
+				{"name":"result","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressResult",
+			"inputs": [
+				{"name":"result","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressError",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhoisMenu",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhoisStart",
+			"inputs": [
+				{"name":"value","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhois",
+			"inputs": [
+				{"name":"result","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhoisResult",
+			"inputs": [
+				{"components":[{"name":"parent","type":"address"},{"name":"path","type":"bytes"},{"name":"name","type":"bytes"},{"name":"owner","type":"address"},{"name":"expiresAt","type":"uint32"},{"components":[{"name":"A","type":"address"},{"name":"ADNL","type":"bytes"},{"name":"TXT","type":"bytes[]"}],"name":"records","type":"tuple"}],"name":"result","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhoisError",
 			"inputs": [
 			],
 			"outputs": [

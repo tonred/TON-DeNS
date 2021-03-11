@@ -1,6 +1,6 @@
 {
 	"ABI version": 2,
-	"header": ["time"],
+	"header": ["pubkey", "time", "expire"],
 	"functions": [
 		{
 			"name": "constructor",
@@ -264,7 +264,6 @@
 				{"name":"instantBuyPrice","type":"uint128"}
 			],
 			"outputs": [
-				{"name":"value0","type":"uint128"}
 			]
 		},
 		{
@@ -273,7 +272,14 @@
 				{"name":"instantBuyMaxSecDuration","type":"uint32"}
 			],
 			"outputs": [
-				{"name":"value0","type":"uint32"}
+			]
+		},
+		{
+			"name": "setAuctionDeposit",
+			"inputs": [
+				{"name":"auctionDeposit","type":"uint32"}
+			],
+			"outputs": [
 			]
 		},
 		{

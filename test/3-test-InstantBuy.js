@@ -60,6 +60,7 @@ describe('Test Instant registration', async function () {
             );
             secondSubDomainCert = copyContract(NicContract);
             secondSubDomainCert.address = secondSubDomainAddr;
+            await setAddress(secondSubDomainCert);
             logger.log(`Sub-Subdomain Certificate: ${secondSubDomainAddr}`);
         });
         it('Check subdomain parent', async function () {
@@ -144,9 +145,34 @@ describe('Test Instant registration', async function () {
                 .to
                 .equal(0, 'Domain was expected not to be registered, but it is registered');
         });
-
     });
 });
+
+async function setAddress(contract) {
+    const setAddressMessage = await tonWrapper.ton.abi.encode_message_body({
+        address: contract.address,
+        abi: {
+            type: "Contract",
+            value: contract.abi,
+        },
+        call_set: {
+            function_name: 'setAddress',
+            input: {newAddress: contract.address},
+        },
+        signer: {
+            type: 'None',
+        },
+        is_internal: true,
+    });
+
+    await TestWalletContract.run('sendTransaction', {
+        dest: contract.address,
+        value: TONTestingSuite.utils.convertCrystal('1', 'nano'),
+        bounce: true,
+        flags: 0,
+        payload: setAddressMessage.body,
+    }, null);
+}
 
 
 async function instantBuyDomain(contract, domainName, durationInSec, value) {

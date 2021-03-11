@@ -1,5 +1,7 @@
 pragma ton-solidity >=0.37.0;
-
+pragma AbiHeader expire;
+pragma AbiHeader time;
+pragma AbiHeader pubkey;
 import "DomainBase.sol";
 import "interfaces/INameIdentityCertificate.sol";
 import {WhoIsInfo, Records, DeNsErrors, RegistrationTypes} from "DeNSLib.sol";
@@ -424,12 +426,16 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         emit UpdateRegistrationType(newRegistrationType);
     }
 
-    function setInstantBuyPrice(uint128 instantBuyPrice) public onlyOwner update returns (uint128) {
+    function setInstantBuyPrice(uint128 instantBuyPrice) public override update onlyOwner {
         _instantBuyPrice = instantBuyPrice;
     }
 
-    function setInstantBuyMaxSecDuration(uint32 instantBuyMaxSecDuration) public update onlyOwner returns (uint32) {
+    function setInstantBuyMaxSecDuration(uint32 instantBuyMaxSecDuration) public override update onlyOwner {
         _instantBuyMaxSecDuration = instantBuyMaxSecDuration;
+    }
+
+    function setAuctionDeposit(uint32 auctionDeposit) public override  update onlyOwner{
+        _auctionDeposit = auctionDeposit;
     }
 
     function setAddress(address newAddress) public override update onlyOwner {

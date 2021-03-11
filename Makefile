@@ -99,7 +99,6 @@ clean-tmp:
 		  $(ARTIFACTS_PATH)/*.code \
 		  $(ARTIFACTS_PATH)/Test*.*
 
-
 define compile_all
 	$(call compile_sol,$(1),$(2))
 	$(call compile_tvm,$(2))

@@ -54,6 +54,12 @@ interface INameIdentityCertificate {
 
     function setRegistrationType(RegistrationTypes newRegistrationType) external;
 
+    function setInstantBuyPrice(uint128 instantBuyPrice) external;
+
+    function setInstantBuyMaxSecDuration(uint32 instantBuyMaxSecDuration) external;
+
+    function setAuctionDeposit(uint32 auctionDeposit) external;
+
     function setAddress(address newAddress) external;
 
     function setAdnlAddress(string newAdnlAddress) external;

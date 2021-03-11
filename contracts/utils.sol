@@ -1,17 +1,17 @@
+pragma ton-solidity ^0.37.0;
+
 library stringUtils {
     function splitBySlash(string value) public returns (string, string){
-        return split(value, 0x2F);
-    }
+        byte separator = 0x2F;
 
-    function split(string value, byte separator) public returns (string, string){
         TvmBuilder bFirstHalf;
         TvmBuilder bSecondHalf;
         bool isSlashFound = false;
         bytes stringBytes = bytes(value);
         uint256 stringLength = stringBytes.length;
-        for(uint8 i = 0; i < stringLength; i++){
+        for (uint8 i = 0; i < stringLength; i++) {
             byte char = stringBytes[i];
-            if (!isSlashFound){
+            if (!isSlashFound) {
                 if (char == separator) isSlashFound = true;
                 else bFirstHalf.store(char);
             }
