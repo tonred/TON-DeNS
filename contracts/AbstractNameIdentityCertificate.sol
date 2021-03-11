@@ -1,5 +1,5 @@
 pragma ton-solidity >=0.37.0;
-import {RegistrationTypes} from "./DeNSLib.sol";
+import {RegistrationTypes} from "DeNSLib.sol";
 
 contract CertificateDeployable{
     address static _parent;

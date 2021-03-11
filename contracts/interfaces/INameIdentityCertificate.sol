@@ -36,7 +36,7 @@ interface INameIdentityCertificate {
     function getInstantBuyMaxSecDuration() external view returns (uint32);
 
     /*  Register name  */
-    function registerNameByOwner(string domainName, uint8 duration) external;
+    function registerNameByOwner(string domainName, uint32 expiresAt) external;
 
     function registerNameByAuction(string domainName, uint8 durationInYears, uint256 bidHash) external;
 

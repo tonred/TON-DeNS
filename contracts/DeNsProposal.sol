@@ -1,16 +1,6 @@
 pragma ton-solidity >=0.37.0;
 
-import {DeNsErrors, RegistrationTypes} from "DeNSLib.sol";
-
-enum VoteCountModel {
-    Undefined,
-    Majority,
-    SoftMajority,
-    SuperMajority,
-    Other,
-    Reserved,
-    Last
-}
+import {DeNsErrors, RegistrationTypes, VoteCountModel} from "DeNSLib.sol";
 
 interface ISDeNsRoot {
     function onProposalCompletion(
@@ -75,10 +65,11 @@ contract DeNsProposal{
         _end = end;
         _description = description;
         _text = text;
+        _model = model;
         deployProposal();
     }
 
-    function deployProposal() private {
+    function deployProposal() private view {
         tvm.rawReserve(address(this).balance - msg.value - 5 ton, 2);
         IDemiurge(_smv).deployProposal{
             value: 0,
@@ -86,10 +77,11 @@ contract DeNsProposal{
         }(_totalVotes, _start, _end, _description, _text, _model);
     }
 
-    function onProposalDeployed(uint32 id, address addr_) public onlySmv { _id = id; }
+    function onProposalDeployed(uint32 id, address _) public onlySmv { _id = id; _;}
 
-    function onProposalCompletion(uint32 id, bool result) public onlySmv {
+    function onProposalCompletion(uint32 _, bool result) public view onlySmv {
         ISDeNsRoot(_root).onProposalCompletion{value: 0, flag: 160}(_name, _smv, result, _owner, _registrationType);
+        _;
     }
 
     function getId() public view returns (uint32) { return _id; }

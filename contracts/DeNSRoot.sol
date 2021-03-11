@@ -1,10 +1,10 @@
 pragma ton-solidity >=0.37.0;
 
+import {RegistrationTypes} from "DeNSLib.sol";
 import 'interfaces/IDeNSRoot.sol';
 import 'DomainBase.sol';
 import 'DeNsProposal.sol';
-import {RegistrationTypes} from "DeNSLib.sol";
-import {CertificateDeployable} from "./AbstractNameIdentityCertificate.sol";
+import {CertificateDeployable} from "AbstractNameIdentityCertificate.sol";
 
 contract DeNSRoot is DomainBase, IDeNSRoot {
     address static _parent;
@@ -12,9 +12,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
     string static _path;
     string static _name;
 
-    TvmCell public _participantStorageCode;
     TvmCell public _proposalCode;
-
 
     struct ReservedDomain {
         address owner;
@@ -35,7 +33,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         ReservedDomain[] reservedDomains,
         uint128 reservedDomainInitialValue
     ) public {
-    // TODO check message from owner;
+        require(msg.pubkey() == tvm.pubkey(), 100);
         tvm.accept();
 
         _certificateCode = certificateCode;
@@ -49,7 +47,8 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
                 reservedDomains[i].domainName,
                 reservedDomains[i].registrationType,
                 0xFFFFFFFF,
-                reservedDomainInitialValue
+                reservedDomainInitialValue,
+                0
             );
         }
     }
@@ -65,13 +64,13 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         string description,
         string text,
         VoteCountModel model
-    ) public onlyParent {
+    ) public override onlyParent {
         tvm.rawReserve(address(this).balance - msg.value, 2);
         TvmCell proposalState = buildProposalStateInit(name, smv);
         new DeNsProposal{
             stateInit: proposalState,
             value: 0,
-            flag: 128
+            flag: SEND_ALL_GAS
         }(owner, registrationType, totalVotes, start, end, description, text, model);
     }
 
@@ -86,15 +85,10 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         require(msg.sender == address.makeAddrStd(0, tvm.hash(proposalState)), DeNsErrors.IS_NOT_PROPOSAL);
         tvm.rawReserve(address(this).balance - msg.value, 2);
         if (result) {
-            TvmCell state = buildNicStateInit(name);
-            new CertificateDeployable{
-                    stateInit: state,
-                    value: 0,
-                    flag: 128
-            }(owner, 0xFFFFFFFF, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+            deployCertificate(owner, name, registrationType, 0xFFFFFFFF, 0, SEND_ALL_GAS);
             return;
         }
-        _parent.transfer({value: 0, flag: 128});
+        _parent.transfer({value: 0, flag: SEND_ALL_GAS});
 
     }
 
@@ -110,7 +104,6 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         });
     }
 
-    // TODO: Move to Base contract after bug with static vars will be fixed in SOLC
     function getResolve(string domainName) public view override returns (address certificate) {
         TvmCell state = buildNicStateInit(domainName);
         certificate = address.makeAddrStd(0, tvm.hash(state));
@@ -129,22 +122,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
     }
 
     function buildNicStateInit(string domainName) internal view returns (TvmCell) {
-        string childContractPath = _path;
-        if (_name.byteLength() > 0) {
-            if (_path.byteLength() > 0) {
-                childContractPath.append(string("/"));
-            }
-            childContractPath.append(_name);
-        }
-        return tvm.buildStateInit({
-            contr: CertificateDeployable,
-            varInit: {
-                _parent: address(this),
-                _path: childContractPath,
-                _name: domainName
-            },
-            code: _certificateCode
-        });
+        return _buildNicStateInit(domainName, _path, _name);
     }
 
     function deployCertificate(
@@ -152,14 +130,15 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         string domainName,
         RegistrationTypes registrationType,
         uint32 expiresAt,
-        uint128 value
+        uint128 value,
+        uint16 flag
     ) internal returns (address) {
         TvmCell state = buildNicStateInit(domainName);
         return new CertificateDeployable{
             stateInit: state,
-            value: value
+            value: value,
+            flag: flag
         }(owner, expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
     }
-
 
 }

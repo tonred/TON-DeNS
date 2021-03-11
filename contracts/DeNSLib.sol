@@ -15,6 +15,16 @@ struct WhoIsInfo {
     Records records;
 }
 
+enum VoteCountModel {
+    Undefined,
+    Majority,
+    SoftMajority,
+    SuperMajority,
+    Other,
+    Reserved,
+    Last
+}
+
 enum RegistrationTypes { OwnerOnly, Auction, Instant }
 
 enum AuctionPhase {OPEN, CONFIRMATION, CLOSE}
