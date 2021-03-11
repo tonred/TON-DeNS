@@ -10,13 +10,12 @@ import "common/Sdk.sol";
 import "common/Menu.sol";
 import "./../interfaces/INameIdentityCertificate.sol";
 import {stringUtils} from '../utils.sol';
+import "../DeNSLib.sol";
+
 
 contract DeNSDebot is Debot {
 
     address densRootAddress;
-
-    string m_resolvableDomainFirstPart;
-    string m_resolvableDomainSecondPart;
 
     constructor(string debotAbi, string targetAbi, address targetAddress) public {
         require(tvm.pubkey() == msg.pubkey(), 100);
@@ -29,8 +28,8 @@ contract DeNSDebot is Debot {
 
     function start() public override {
         Menu.select("Main menu", "Hello, I am a DeNS debot. Select operation:", [
-            MenuItem("Resolve domain", "", tvm.functionId(menuResolveDomain)),
-            MenuItem("Do whois operation", "", tvm.functionId(menuWhois)),
+            MenuItem("Get address (resolve)", "", tvm.functionId(getAddressMenu)),
+            MenuItem("Get whois", "", tvm.functionId(getWhoisMenu)),
             MenuItem("Exit", "", 0)
             ]);
     }
@@ -43,25 +42,36 @@ contract DeNSDebot is Debot {
     }
 
     /*
-    * Resolve domain
+    * Resolve base
     */
 
-    function menuResolveDomain(uint32 index) public {
-        Terminal.inputStr(tvm.functionId(resolveDomain), "Enter domain to resolve: ", false);
+    // Dont use struct! It max size is 1023
+    string resolveCurrentPath;
+    string resolveOtherPath;
+    uint8 resolveCallback;  // todo improve
+
+    function resolveSplit(string domain) public {
+        (string currentPath, string otherPath) = stringUtils.splitBySlash(domain);
+        resolveCurrentPath = currentPath;
+        resolveOtherPath = otherPath;
     }
 
-    function resolveDomain(string value) public {
-        setResolvableDomainParts(value);
-        resolve(m_resolvableDomainFirstPart, densRootAddress);
+    function resolve(address parentDomain) public {
+        if (resolveOtherPath != "") {
+            resolveSplit(resolveOtherPath);
+            resolveCurrent(parentDomain);
+        } else {
+            if (resolveCallback == 0) {
+                getAddress(parentDomain);
+            }
+            if (resolveCallback == 1) {
+                getWhois(parentDomain);
+            }
+        }
     }
 
-    function setResolvableDomainParts(string value) public {
-        (string firstPart, string secondPart) = stringUtils.splitBySlash(value);
-        m_resolvableDomainFirstPart = firstPart;
-        m_resolvableDomainSecondPart = secondPart;
-    }
-
-    function resolve(string domainValue, address parentDomain) public {
+    function resolveCurrent(address parentDomain) public {
+//        Terminal.print(0, format("resolving {} {}", resolveCurrentPath, resolveOtherPath));
         optional(uint256) pubkey;
         INameIdentityCertificate(parentDomain).getResolve{
             abiVer: 2,
@@ -70,30 +80,92 @@ contract DeNSDebot is Debot {
             pubkey: pubkey,
             time: uint64(now),
             expire: 0,
-            callbackId: tvm.functionId(resolveNext),
-            onErrorId: 0
-        }(domainValue);
+            callbackId: tvm.functionId(resolve),
+            onErrorId: tvm.functionId(resolveError)
+        }(resolveCurrentPath);
     }
 
-    function resolveNext(address domain) public {
-        if(m_resolvableDomainSecondPart != "") {
-            setResolvableDomainParts(m_resolvableDomainSecondPart);
-            resolve(m_resolvableDomainFirstPart, domain);
-        } else {
-            Terminal.print(0, format("Domain is resolved: {}", domain));
-        }
+    function resolveError() public {
+        Terminal.print(0, format("Some exception in resolve"));  // dont works
     }
-
 
     /*
-    * Whois
+    * Get address
     */
 
-    function menuWhois(uint32 index) public {
-        Terminal.inputStr(tvm.functionId(whois), "Enter domain to do whois operation:", false);
+    string getAddressInput;
+
+    function getAddressMenu(uint32 index) public {
+        Terminal.inputStr(tvm.functionId(getAddressStart), "Enter domain: ", false);
     }
 
-    function whois(string value) public {
+    function getAddressStart(string value) public {
+        getAddressInput = value;
+        resolveOtherPath = value;
+        resolveCallback = 0;
+//        resolveResult = address.makeAddrNone();
+        resolve(densRootAddress);
+    }
 
+    function getAddress(address result) public {
+        optional(uint256) pubkey;
+        INameIdentityCertificate(result).getAddress{
+            abiVer: 2,
+            extMsg: true,
+            sign: false,
+            pubkey: pubkey,
+            time: uint64(now),
+            expire: 0,
+            callbackId: tvm.functionId(getAddressResult),
+            onErrorId: 0
+        }();
+    }
+
+    function getAddressResult(address result) public {
+        Terminal.print(0, format("Domain '{}' address: {}", getAddressInput, result));
+    }
+
+    function getAddressError() public {
+        Terminal.print(0, format("Domain '{}' in not exists", getAddressInput));
+    }
+
+    /*
+    * Get whois
+    */
+
+    string getWhoisInput;
+
+    function getWhoisMenu(uint32 index) public {
+        Terminal.inputStr(tvm.functionId(getWhoisStart), "Enter domain: ", false);
+    }
+
+    function getWhoisStart(string value) public {
+        getWhoisInput = value;
+        resolveOtherPath = value;
+        resolveCallback = 1;
+        resolve(densRootAddress);
+    }
+
+    function getWhois(address result) public {
+        optional(uint256) pubkey;
+        INameIdentityCertificate(result).getWhoIs{
+            abiVer: 2,
+            extMsg: true,
+            sign: false,
+            pubkey: pubkey,
+            time: uint64(now),
+            expire: 0,
+            callbackId: tvm.functionId(getWhoisResult),
+            onErrorId: 0
+        }();
+    }
+
+    function getWhoisResult(WhoIsInfo result) public {
+        Terminal.print(0, format("Whois of '{}' is: {\n\tparent = {}\n\tpath = {}\n\tname = {}\n\towner = {}\n\texpiresAt = {}\n}",
+            getWhoisInput, result.parent, result.path, result.name, result.owner, result.expiresAt));
+    }
+
+    function getWhoisError() public {
+        Terminal.print(0, format("Domain '{}' in not exists", getWhoisInput));
     }
 }

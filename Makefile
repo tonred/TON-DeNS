@@ -73,6 +73,9 @@ clean-tmp:
 		  $(ARTIFACTS_PATH)/*.code \
 		  $(ARTIFACTS_PATH)/Test*.*
 
+start-debot:
+	@echo "start-debot"
+	tonos-cli debot fetch `cat migration-log.json | jq -r '.DeBotDeNS.address'`
 
 define compile_all
 	$(call compile_sol,$(1),$(2))

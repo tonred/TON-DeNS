@@ -44,25 +44,9 @@
 			]
 		},
 		{
-			"name": "menuResolveDomain",
+			"name": "resolveSplit",
 			"inputs": [
-				{"name":"index","type":"uint32"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "resolveDomain",
-			"inputs": [
-				{"name":"value","type":"bytes"}
-			],
-			"outputs": [
-			]
-		},
-		{
-			"name": "setResolvableDomainParts",
-			"inputs": [
-				{"name":"value","type":"bytes"}
+				{"name":"domain","type":"bytes"}
 			],
 			"outputs": [
 			]
@@ -70,22 +54,28 @@
 		{
 			"name": "resolve",
 			"inputs": [
-				{"name":"domainValue","type":"bytes"},
 				{"name":"parentDomain","type":"address"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "resolveNext",
+			"name": "resolveCurrent",
 			"inputs": [
-				{"name":"domain","type":"address"}
+				{"name":"parentDomain","type":"address"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "menuWhois",
+			"name": "resolveError",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressMenu",
 			"inputs": [
 				{"name":"index","type":"uint32"}
 			],
@@ -93,9 +83,71 @@
 			]
 		},
 		{
-			"name": "whois",
+			"name": "getAddressStart",
 			"inputs": [
 				{"name":"value","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddress",
+			"inputs": [
+				{"name":"result","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressResult",
+			"inputs": [
+				{"name":"result","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getAddressError",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhoisMenu",
+			"inputs": [
+				{"name":"index","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhoisStart",
+			"inputs": [
+				{"name":"value","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhois",
+			"inputs": [
+				{"name":"result","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhoisResult",
+			"inputs": [
+				{"components":[{"name":"parent","type":"address"},{"name":"path","type":"bytes"},{"name":"name","type":"bytes"},{"name":"owner","type":"address"},{"name":"expiresAt","type":"uint32"},{"components":[{"name":"A","type":"address"},{"name":"ADNL","type":"bytes"},{"name":"TXT","type":"bytes[]"}],"name":"records","type":"tuple"}],"name":"result","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getWhoisError",
+			"inputs": [
 			],
 			"outputs": [
 			]
