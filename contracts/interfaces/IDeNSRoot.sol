@@ -15,6 +15,8 @@ interface IDeNSRoot {
         VoteCountModel model
     ) external;
 
+    function setProposalCode(TvmCell proposalCode) external;
+
     function getResolve(string domainName) external view returns (address);
 
     function getParent() external view returns (address);

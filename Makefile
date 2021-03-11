@@ -44,7 +44,7 @@ deploy-debot:
 
 deploy-tests:
 	@echo "Deploying Tests contract"
-	node migration/3-deploy-TestContracts.js
+	node migration/4-deploy-TestContracts.js
 
 build: build-root build-cert build-debot build-auction build-test build-participant-storage build-proposal
 	@echo "Compiling all contracts"

@@ -21,6 +21,8 @@ interface IDomainAuction {
 
     function getCurrentBidsCount() external view returns (uint64);
 
+    function getBid(address bidder) external view returns (uint256);
+
     /* Bids functions */
     function makeBid(uint256 bidHash) external;
 
@@ -29,8 +31,6 @@ interface IDomainAuction {
     function confirmBid(uint128 bidValue, uint256 salt) external;
 
     function calcHash(uint128 bidValue, uint256 salt) external pure returns (uint256);
-
-    function update() external;
 
     /* History functions ? */
 }

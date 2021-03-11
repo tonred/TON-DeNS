@@ -5,6 +5,12 @@ contract TesWallet {
     constructor() public {
         tvm.accept();
     }
+
+    function sendGrams(address dest, uint64 amount) public pure {
+        tvm.accept();
+        dest.transfer({value: amount, bounce: false});
+    }
+
     function sendTransaction(
         address dest,
         uint128 value,

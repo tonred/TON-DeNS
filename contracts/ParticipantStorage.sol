@@ -8,6 +8,8 @@ struct ParticipantStoragePK{
 struct ParticipantStorageData{
     ParticipantStoragePK pk;
     uint32 requestedExpiresAt;
+    uint8 durationInYears;
+    uint256 bidHash;
 }
 
 contract ParticipantStorage {
@@ -39,7 +41,7 @@ contract ParticipantStorage {
         return{value: 0, flag: 128} _data;
     }
 
-    function prune() public view returns (ParticipantStoragePK) {
-        return{value: 0, flag: 160} _data.pk;
+    function prune() public view returns (ParticipantStorageData) {
+        return{value: 0, flag: 160} _data;
     }
 }

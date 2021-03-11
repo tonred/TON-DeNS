@@ -42,6 +42,9 @@ interface INameIdentityCertificate {
 
     function registerInstantName(string domainName, uint32 durationInSec) external;
 
+    /*  callback functions  */
+
+    function onAuctionCompletionCallback(string domainName, address newOwner, uint32 expiresAt) external;
 
     /*  Parent functions  */
     function updateCertificate(address newOwner, uint32 newExpiresAt) external returns(string, address, bool);

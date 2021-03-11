@@ -8,9 +8,16 @@
 				{"name":"certificateCode","type":"cell"},
 				{"name":"auctionCode","type":"cell"},
 				{"name":"participantStorageCode","type":"cell"},
-				{"name":"proposalCode","type":"cell"},
 				{"components":[{"name":"owner","type":"address"},{"name":"domainName","type":"bytes"},{"name":"registrationType","type":"uint8"}],"name":"reservedDomains","type":"tuple[]"},
 				{"name":"reservedDomainInitialValue","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setProposalCode",
+			"inputs": [
+				{"name":"proposalCode","type":"cell"}
 			],
 			"outputs": [
 			]
@@ -91,14 +98,6 @@
 			],
 			"outputs": [
 				{"name":"value0","type":"cell"}
-			]
-		},
-		{
-			"name": "_participantStorageCode",
-			"inputs": [
-			],
-			"outputs": [
-				{"name":"_participantStorageCode","type":"cell"}
 			]
 		},
 		{

@@ -21,7 +21,7 @@
 			"name": "onProposalDeployed",
 			"inputs": [
 				{"name":"id","type":"uint32"},
-				{"name":"addr_","type":"address"}
+				{"name":"_","type":"address"}
 			],
 			"outputs": [
 			]
@@ -29,7 +29,7 @@
 		{
 			"name": "onProposalCompletion",
 			"inputs": [
-				{"name":"id","type":"uint32"},
+				{"name":"_","type":"uint32"},
 				{"name":"result","type":"bool"}
 			],
 			"outputs": [

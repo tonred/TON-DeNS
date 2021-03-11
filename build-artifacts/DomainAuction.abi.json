@@ -6,7 +6,8 @@
 			"name": "constructor",
 			"inputs": [
 				{"name":"thisDomainExpiresAt","type":"uint32"},
-				{"name":"auctionDuration","type":"uint32"}
+				{"name":"auctionDuration","type":"uint32"},
+				{"name":"auctionDeposit_","type":"uint128"}
 			],
 			"outputs": [
 			]
@@ -76,6 +77,15 @@
 			]
 		},
 		{
+			"name": "getBid",
+			"inputs": [
+				{"name":"bidder","type":"address"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
 			"name": "makeBid",
 			"inputs": [
 				{"name":"bidHash","type":"uint256"}
@@ -100,10 +110,39 @@
 			]
 		},
 		{
-			"name": "update",
+			"name": "calcHash",
+			"inputs": [
+				{"name":"bidValue","type":"uint128"},
+				{"name":"salt","type":"uint256"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint256"}
+			]
+		},
+		{
+			"name": "finish",
 			"inputs": [
 			],
 			"outputs": [
+			]
+		},
+		{
+			"name": "setInitialBid",
+			"inputs": [
+				{"name":"sender","type":"address"},
+				{"name":"bidHash","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "isAbleToParticipate",
+			"inputs": [
+				{"name":"requestHash","type":"uint128"}
+			],
+			"outputs": [
+				{"name":"value0","type":"uint128"},
+				{"name":"value1","type":"bytes"}
 			]
 		}
 	],

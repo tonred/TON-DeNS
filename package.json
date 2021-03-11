@@ -13,6 +13,7 @@
   "dependencies": {
     "@tonclient/core": "^1.9.0",
     "@tonclient/lib-node": "^1.9.0",
+    "bignumber.js": "^9.0.1",
     "chai": "^4.3.0",
     "dotenv": "^8.2.0",
     "handlebars": "^4.7.7",

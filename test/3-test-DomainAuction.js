@@ -2,121 +2,158 @@ const {expect} = require('chai');
 const logger = require('mocha-logger');
 const TONTestingSuite = require("ton-testing-suite");
 const BigNumber = require('bignumber.js');
-const {loadDeNSAuctionContract, loadTestWalletContract} = require("../migration/loadContracts");
-const {loadTestingEnv} = require("./utils");
+const {
+    loadDeNSAuctionContract,
+    loadDeNSCertContract,
+    loadTestWalletContract,
+    loadDeNSRootContract
+} = require("../migration/loadContracts");
+const {loadTestingEnv, copyContract} = require("./utils");
 
 const {ARTIFACTS_PATH, ALIAS, tonWrapper} = loadTestingEnv();
+const reservedDomainWithAuctionReg = "os";
 
+let DeNSRootContract;
 let DomainAuction;
 let TestWalletContract;
+let NicContract;
+let rootCertAddress;
+let rootCert;
+
+async function resolve(cert, name) {
+    return await cert.runLocal('getResolve', {
+        domainName: TONTestingSuite.utils.stringToBytesArray(name)
+    });
+}
+
+async function resolveAuction(cert, name) {
+    return await cert.runLocal('getResolveAuction', {
+        domainName: TONTestingSuite.utils.stringToBytesArray(name)
+    });
+}
 
 
 describe('Test Domain Auction', async function () {
     this.timeout(12000000);
+    const name = 'test';
+    const value = '105';
 
     before(async function () {
         await tonWrapper.setup();
         DomainAuction = await loadDeNSAuctionContract(tonWrapper);
+        NicContract = await loadDeNSCertContract(tonWrapper);
+        DeNSRootContract = await loadDeNSRootContract(tonWrapper);
         TestWalletContract = await loadTestWalletContract(tonWrapper);
-        await DomainAuction.loadMigration(ALIAS);
+        await DeNSRootContract.loadMigration(ALIAS);
         await TestWalletContract.loadMigration('Test' + ALIAS);
-        logger.log(`Domain Auction contract address: ${DomainAuction.address}`);
+        rootCertAddress = await resolve(DeNSRootContract, reservedDomainWithAuctionReg)
+        rootCert = copyContract(NicContract);
+        rootCert.address = rootCertAddress;
+        logger.log(`Root Certificate with Auction buy: ${rootCertAddress}`);
     });
 
     describe('Check Domain Auction initial configuration', async function () {
         let domainExpiresAt;
         let openTime, confirmationTime, closeTime;
         before(async function () {
+            DomainAuction.address = await resolveAuction(rootCert, name);
+            logger.log(`Domain Auction contract address: ${DomainAuction.address}`);
+            await buyDomain(rootCert, name, 10, 111, value);
+
             domainExpiresAt = await DomainAuction.runLocal('getDomainExpiresAt');
             openTime = await DomainAuction.runLocal('getOpenTime');
             confirmationTime = await DomainAuction.runLocal('getConfirmationTime');
             closeTime = await DomainAuction.runLocal('getCloseTime');
+
         });
 
         it('Check address NIC', async function () {
             expect(await DomainAuction.runLocal('getAddressNIC'))
                 .to
-                .equal('0:841288ed3b55d9cdafa806807f02a0ae0c169aa5edfe88a789a6482429756a94', 'Wrong address NIC');
+                .equal(rootCert.address, 'Wrong address NIC');
         });
         it('Check relative domain name', async function () {
             expect((await DomainAuction.runLocal('getRelativeDomainName')).toString())
                 .to
-                .equal('test', 'Wrong relative domain name');
+                .equal(name, 'Wrong relative domain name');
         });
         it('Check phase', async function () {
             expect((await DomainAuction.runLocal('getPhase')).toString())
                 .to
                 .equal('0', 'Wrong initial phase');
         });
-        it('Check open time duration', async function () {
-            expect(openTime.finishTime - openTime.startTime)
-                .to
-                .equal(60 - 30, 'Wrong open time');
-        });
-        it('Check confirmation time duration', async function () {
-            expect(openTime.finishTime - openTime.startTime)
-                .to
-                .equal(30, 'Wrong confirmation time');
-        });
-        it('Check close time', async function () {
-            expect(closeTime.finishTime.toString())
-                .to
-                .equal(domainExpiresAt.toString(), 'Wrong close time');
-        });
-        it('Check phase order', async function () {
-            expect(openTime.finishTime.toString())
-                .to
-                .equal(confirmationTime.startTime.toString(), 'Open and confirmation phase mismatch');
-            expect(confirmationTime.finishTime.toString())
-                .to
-                .equal(closeTime.startTime.toString(), 'Confirmation and close phase mismatch');
-        });
-    });
-
-    describe('Check Domain Auction workflow', async function () {
-        let firstBidValue = 1000;
-        let secondBidValue = 2000;
-        it('Make first bid', async function () {
-            let salt = randomInt(0, Number.MAX_SAFE_INTEGER);
-            let bidHash = BigNumber(await DomainAuction.runLocal('calcHash', {
-                bidValue: firstBidValue, salt: salt,
-            })).toFixed();
-            logger.log(`First bid: value=${firstBidValue}, salt=${salt}, bidHash=${bidHash}`);
-            let response = await makeBid(DomainAuction, bidHash, 101);
+        it('Check bid remove', async function () {
+            await removeBid(DomainAuction, '1');
             expect((await DomainAuction.runLocal('getCurrentBidsCount')).toString())
                 .to
-                .equal('1', 'First bid is not made');
+                .equal('0', 'Bid not removed');
         });
+
+        it('Check make bid', async function () {
+            let salt = randomInt(0, Number.MAX_SAFE_INTEGER);
+            let bidValue = 1111;
+            let bidHash = BigNumber(await DomainAuction.runLocal('calcHash', {
+                bidValue: bidValue, salt: salt,
+            })).toFixed();
+            logger.log(`First bid: value=${bidValue}, salt=${salt}, bidHash=${bidHash}`);
+            await makeBid(DomainAuction, bidHash, value);
+
+            expect((await DomainAuction.runLocal('getCurrentBidsCount')).toString())
+                .to
+                .equal('1', 'First bids is not made');
+        })
     });
+
+
 });
 
+async function buyDomain(contract, domainName, durationInYears, bidHash, value) {
+    const message = await encode_message_body(contract, 'registerNameByAuction', {
+        domainName: TONTestingSuite.utils.stringToBytesArray(domainName),
+        durationInYears: durationInYears,
+        bidHash: bidHash
+    })
+    return await send(contract.address, message.body, value);
+}
 
 function randomInt(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 async function makeBid(contract, bidHash, value) {
-    const message = await tonWrapper.ton.abi.encode_message_body({
+    const message = await encode_message_body(contract, 'makeBid', {bidHash: bidHash});
+    return await send(contract.address, message.body, value);
+}
+
+async function removeBid(contract, value) {
+    const message = await encode_message_body(contract, 'removeBid', {});
+    return await send(contract.address, message.body, value);
+}
+
+async function encode_message_body(contract, function_name, input) {
+    return await tonWrapper.ton.abi.encode_message_body({
         address: contract.address,
         abi: {
             type: 'Contract',
             value: contract.abi,
         },
         call_set: {
-            function_name: 'makeBid',
-            input: {bidHash: bidHash},
+            function_name: function_name,
+            input: input,
         },
         signer: {
             type: 'None',
         },
         is_internal: true,
     });
+}
 
+async function send(dest, payload, value) {
     return await TestWalletContract.run('sendTransaction', {
-        dest: contract.address,
+        dest: dest,
         value: TONTestingSuite.utils.convertCrystal(value, 'nano'),
         bounce: true,
         flags: 0,
-        payload: message.body,
+        payload: payload,
     }, null);
 }

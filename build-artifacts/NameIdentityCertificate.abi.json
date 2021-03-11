@@ -5,6 +5,7 @@
 		{
 			"name": "constructor",
 			"inputs": [
+				{"name":"owner","type":"address"},
 				{"name":"expiresAt","type":"uint32"},
 				{"name":"registrationType","type":"uint8"},
 				{"name":"certificateCode","type":"cell"},
@@ -95,10 +96,19 @@
 			]
 		},
 		{
+			"name": "getResolveAuction",
+			"inputs": [
+				{"name":"domainName","type":"bytes"}
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
 			"name": "registerNameByOwner",
 			"inputs": [
 				{"name":"domainName","type":"bytes"},
-				{"name":"duration","type":"uint8"}
+				{"name":"expiresAt","type":"uint32"}
 			],
 			"outputs": [
 			]
@@ -123,6 +133,17 @@
 			]
 		},
 		{
+			"name": "isAbleToRegister",
+			"inputs": [
+				{"name":"requestHash","type":"uint128"}
+			],
+			"outputs": [
+				{"name":"value0","type":"bool"},
+				{"name":"value1","type":"uint128"},
+				{"name":"value2","type":"bytes"}
+			]
+		},
+		{
 			"name": "onUpdateChildCert",
 			"inputs": [
 				{"name":"domain","type":"bytes"},
@@ -143,9 +164,44 @@
 			]
 		},
 		{
+			"name": "onCheckAuctionCallback",
+			"inputs": [
+				{"name":"requestHash","type":"uint128"},
+				{"name":"domainName","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onAuctionCompletionCallback",
+			"inputs": [
+				{"name":"domainName","type":"bytes"},
+				{"name":"newOwner","type":"address"},
+				{"name":"expiresAt","type":"uint32"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onStorageReadCheckAuction",
+			"inputs": [
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"storageData","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "onStoragePruneDeployAuction",
+			"inputs": [
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"storageData","type":"tuple"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "onStoragePrunePayToOwner",
 			"inputs": [
-				{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"storageDataPK","type":"tuple"}
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"storageData","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -153,28 +209,25 @@
 		{
 			"name": "onStoragePruneReturnFunds",
 			"inputs": [
-				{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"storageDataPK","type":"tuple"}
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"storageData","type":"tuple"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "onStorageReadResponse",
+			"name": "onStorageReadDeployCert",
 			"inputs": [
-				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"}],"name":"storageData","type":"tuple"}
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"storageData","type":"tuple"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "isAbleToRegister",
+			"name": "onStorageReadUpdateCert",
 			"inputs": [
-				{"name":"requestHash","type":"uint128"}
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"storageData","type":"tuple"}
 			],
 			"outputs": [
-				{"name":"value0","type":"bool"},
-				{"name":"value1","type":"uint128"},
-				{"name":"value2","type":"bytes"}
 			]
 		},
 		{
@@ -314,9 +367,7 @@
 		{
 			"name": "UpdateCertificate",
 			"inputs": [
-				{"name":"previousOwner","type":"address"},
 				{"name":"newOwner","type":"address"},
-				{"name":"previousExpiresAt","type":"uint32"},
 				{"name":"newExpiresAt","type":"uint32"}
 			],
 			"outputs": [
@@ -325,7 +376,6 @@
 		{
 			"name": "UpdateOwner",
 			"inputs": [
-				{"name":"previousOwner","type":"address"},
 				{"name":"newOwner","type":"address"}
 			],
 			"outputs": [
@@ -334,7 +384,6 @@
 		{
 			"name": "UpdateRegistrationType",
 			"inputs": [
-				{"name":"previousRegistrationType","type":"uint8"},
 				{"name":"newRegistrationType","type":"uint8"}
 			],
 			"outputs": [
@@ -343,7 +392,6 @@
 		{
 			"name": "UpdateRecordAddress",
 			"inputs": [
-				{"name":"previousRecordAddress","type":"address"},
 				{"name":"newRecordAddress","type":"address"}
 			],
 			"outputs": [
@@ -352,8 +400,23 @@
 		{
 			"name": "UpdateADNLAddress",
 			"inputs": [
-				{"name":"previousADNLAddress","type":"bytes"},
 				{"name":"newADNLAddress","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "CertificateDeployed",
+			"inputs": [
+				{"name":"name","type":"bytes"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "AuctionDeployed",
+			"inputs": [
+				{"name":"name","type":"bytes"}
 			],
 			"outputs": [
 			]

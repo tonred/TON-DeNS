@@ -27,19 +27,17 @@ async function deployDeNSRoot(tonWrapper, migration) {
             certificateCode: DeNSCertContract.code,
             auctionCode: DeNSAuctionContract.code,
             participantStorageCode: ParticipantStorageContract.code,
-            proposalCode: DeNsProposalContract.code,
             reservedDomains: reservedDomains,
-            reservedDomainInitialValue: TONTestingSuite.utils.convertCrystal('10', 'nano')
+            reservedDomainInitialValue: TONTestingSuite.utils.convertCrystal('2', 'nano')
         },
         initParams: {
             _parent: process.env.ROOT_OWNER_ADDRESS,
             _path: '',
             _name: '',
         },
-        initialBalance: TONTestingSuite.utils.convertCrystal('110', 'nano'),
+        initialBalance: TONTestingSuite.utils.convertCrystal('10', 'nano'),
         alias: process.env.ALIAS,
     });
-
 }
 
 if (require.main === module) {

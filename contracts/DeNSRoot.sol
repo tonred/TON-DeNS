@@ -29,7 +29,6 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         TvmCell certificateCode,
         TvmCell auctionCode,
         TvmCell participantStorageCode,
-        TvmCell proposalCode,
         ReservedDomain[] reservedDomains,
         uint128 reservedDomainInitialValue
     ) public {
@@ -39,7 +38,6 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         _certificateCode = certificateCode;
         _auctionCode = auctionCode;
         _participantStorageCode = participantStorageCode;
-        _proposalCode = proposalCode;
 
         for (uint i = 0; i < reservedDomains.length; i++) {
             deployCertificate(
@@ -51,6 +49,10 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
                 0
             );
         }
+    }
+
+    function setProposalCode(TvmCell proposalCode) public override onlyParent {
+        _proposalCode = proposalCode;
     }
 
     function createDomainProposal(

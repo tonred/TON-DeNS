@@ -2,18 +2,18 @@ pragma ton-solidity >=0.37.0;
 
 import "DomainBase.sol";
 import "interfaces/INameIdentityCertificate.sol";
-import {WhoIsInfo, Records, DeNsErrors, RegistrationTypes} from "./DeNSLib.sol";
-import {CertificateDeployable} from "./AbstractNameIdentityCertificate.sol";
+import {WhoIsInfo, Records, DeNsErrors, RegistrationTypes} from "DeNSLib.sol";
+import {CertificateDeployable} from "AbstractNameIdentityCertificate.sol";
 import "ParticipantStorage.sol";
+import "DomainAuction.sol";
 
 
 contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
+    uint32 constant REGISTRATION_PERIOD = 28 days;
 
-    uint16 constant SEND_ALL_GAS = 128;
-
-    uint128 constant CHECK_NIC_FEE = 0.03 ton;
-    uint128 constant DEFAULT_MESSAGE_VALUE = 0.1 ton;
+    uint128 constant DEFAULT_MESSAGE_VALUE = 0.5 ton;
     uint128 constant DEPLOY_NIC_VALUE = 1 ton;
+    uint128 constant DEPLOY_AUCTION_VALUE = 1 ton;
 
     address static _parent;
 
@@ -22,26 +22,22 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
     uint128 _startBalance;
 
-    TvmCell _participantStorageCode;
-
     address _owner;
     uint32 _expiresAt;
     RegistrationTypes _registrationType;
     Records _records;
 
+    uint128 _auctionDeposit = 10 ton;
     uint128 _instantBuyPrice = 10 ton;
     uint32 _instantBuyMaxSecDuration = 4 weeks;
 
-    event UpdateCertificate(
-        address indexed previousOwner,
-        address indexed newOwner,
-        uint32 previousExpiresAt,
-        uint32 newExpiresAt
-    );
-    event UpdateOwner(address indexed previousOwner, address indexed newOwner);
-    event UpdateRegistrationType(RegistrationTypes previousRegistrationType, RegistrationTypes newRegistrationType);
-    event UpdateRecordAddress(address previousRecordAddress, address newRecordAddress);
-    event UpdateADNLAddress(string previousADNLAddress, string newADNLAddress);
+    event UpdateCertificate(address newOwner, uint32 newExpiresAt);
+    event UpdateOwner(address newOwner);
+    event UpdateRegistrationType(RegistrationTypes newRegistrationType);
+    event UpdateRecordAddress(address newRecordAddress);
+    event UpdateADNLAddress(string newADNLAddress);
+    event CertificateDeployed(string name);
+    event AuctionDeployed(string name);
 
     /*
      * modifiers
@@ -62,6 +58,17 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         _;
     }
 
+    modifier update() {
+        if(isExpired()) {
+            reserve(0);
+            _owner = address(0);
+            string[] TXT;
+            _records = Records(address(0), string(""), TXT);
+            msg.sender.transfer({value: 0, flag: SEND_ALL_GAS});
+            tvm.exit();
+        }
+        _;
+    }
 
     constructor(
         address owner,
@@ -128,6 +135,11 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         return _instantBuyMaxSecDuration;
     }
 
+    function getResolveAuction(string domainName) public view returns (address){
+        TvmCell auctionStateInit = buildAuctionStateInit(domainName);
+        return calcAddress(auctionStateInit);
+    }
+
     /*
     *  Public functions
     */
@@ -136,37 +148,29 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
     function registerNameByOwner (
         string domainName,
-        uint8 duration
-    ) public override onlyOwner isAllowedRegType(RegistrationTypes.OwnerOnly) {
+        uint32 expiresAt
+    ) public override update onlyOwner isAllowedRegType(RegistrationTypes.OwnerOnly) {
         require(isNameValid(domainName), DeNsErrors.INVALID_DOMAIN_NAME);
-
+        require(expiresAt < _expiresAt, DeNsErrors.DURATION_LARGER_ROOT_CERT_EXPIRES);
+        reserve(0);
+        deployCertificate(_owner, domainName, _registrationType, expiresAt, DEPLOY_NIC_VALUE);
     }
 
     function registerNameByAuction(
         string domainName,
         uint8 durationInYears,
         uint256 bidHash
-    ) public override isAllowedRegType(RegistrationTypes.Auction) {
+    ) public override update isAllowedRegType(RegistrationTypes.Auction) {
+        reserve(0);
         require(isNameValid(domainName), DeNsErrors.INVALID_DOMAIN_NAME);
-
-    }
-
-    function registerInstantName(
-        string domainName,
-        uint32 durationInSec
-    ) public override isAllowedRegType(RegistrationTypes.Instant) {
-        require(msg.value >= _instantBuyPrice, DeNsErrors.NOT_ENOUGH_TOKENS_FOR_INSTANT_BUY);
-        require(isNameValid(domainName), DeNsErrors.INVALID_DOMAIN_NAME);
-        require(durationInSec < _instantBuyMaxSecDuration, DeNsErrors.DURATION_LARGER_MAX_ALLOWED_FOR_INSTANT_BUY);
-        uint32 requestedExpiresAt = calcRequestedExpiresAt(durationInSec);
+        require(msg.value > _auctionDeposit + DEFAULT_MESSAGE_VALUE, DeNsErrors.NOT_ENOUGH_TOKENS_FOR_AUCTION);
+        uint32 requestedExpiresAt = calcRequestedExpiresAtByYears(durationInYears);
         require(requestedExpiresAt < _expiresAt, DeNsErrors.DURATION_LARGER_ROOT_CERT_EXPIRES);
 
-        tvm.rawReserve(address(this).balance - msg.value + CHECK_NIC_FEE, 2);
+
+        address subdomainCertificate = getResolve(domainName);
 
         address sender = msg.sender;
-        TvmCell nicState = buildNicStateInit(domainName);
-        address subdomainCertificate = address.makeAddrStd(0, tvm.hash(nicState));
-
         ParticipantStoragePK storagePk = ParticipantStoragePK(sender, domainName);
         uint128 requestHash = calcRequestHash(storagePk);
 
@@ -175,30 +179,101 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
             callback: isAbleToRegisterCallback
         }(requestHash);
         TvmCell participantStorageState = buildParticipantStorageStateInit(address(this), requestHash);
-        ParticipantStorageData pStorageData = ParticipantStorageData(storagePk, requestedExpiresAt);
+        ParticipantStorageData pStorageData = ParticipantStorageData(storagePk, requestedExpiresAt, durationInYears, bidHash);
 
         new ParticipantStorage{stateInit: participantStorageState, value: 0, flag: SEND_ALL_GAS}(pStorageData);
+
+    }
+
+    function registerInstantName(
+        string domainName,
+        uint32 durationInSec
+    ) public override update isAllowedRegType(RegistrationTypes.Instant) {
+        require(msg.value >= _instantBuyPrice, DeNsErrors.NOT_ENOUGH_TOKENS_FOR_INSTANT_BUY);
+        require(isNameValid(domainName), DeNsErrors.INVALID_DOMAIN_NAME);
+        require(durationInSec < _instantBuyMaxSecDuration, DeNsErrors.DURATION_LARGER_MAX_ALLOWED_FOR_INSTANT_BUY);
+        uint32 requestedExpiresAt = calcRequestedExpiresAt(durationInSec);
+        require(requestedExpiresAt < _expiresAt, DeNsErrors.DURATION_LARGER_ROOT_CERT_EXPIRES);
+
+        reserve(0);
+
+        address subdomainCertificate = getResolve(domainName);
+
+        address sender = msg.sender;
+        ParticipantStoragePK storagePk = ParticipantStoragePK(sender, domainName);
+        uint128 requestHash = calcRequestHash(storagePk);
+
+        NameIdentityCertificate(subdomainCertificate).isAbleToRegister{
+            value: DEFAULT_MESSAGE_VALUE,
+            callback: isAbleToRegisterCallback
+        }(requestHash);
+        TvmCell participantStorageState = buildParticipantStorageStateInit(address(this), requestHash);
+        ParticipantStorageData pStorageData = ParticipantStorageData(storagePk, requestedExpiresAt, 0, 0);
+
+        new ParticipantStorage{stateInit: participantStorageState, value: 0, flag: SEND_ALL_GAS}(pStorageData);
+    }
+
+    function isAbleToRegister(uint128 requestHash) public view override returns (bool, uint128, string) {
+        reserve(0);
+        bool isAble = false;
+        if (isAuction()) {
+            isAble = _expiresAt <= now + REGISTRATION_PERIOD;
+        } else if (isInstantBuy()) {
+            isAble = isExpired();
+        }
+        return{value: 0, flag: SEND_ALL_GAS} (isAble, requestHash, _name);
     }
 
     /*
     *  Callbacks
     */
 
+    onBounce(TvmSlice slice) external view {
+        uint32 functionId = slice.decode(uint32);
+        if (functionId == tvm.functionId(isAbleToRegister)) {
+            reserve(0);
+            (uint32 _, uint128 requestHash) = slice.decodeFunctionParams(isAbleToRegister);
+            address pStorage = calcParticipantStorageAddress(requestHash);
+            if (isAuction()){
+                ParticipantStorage(pStorage).getData{value: 0, flag: SEND_ALL_GAS, callback: onStorageReadCheckAuction}();
+            } else if (isInstantBuy()){
+                ParticipantStorage(pStorage).getDataAndWithdraw{
+                    value: 0,
+                    flag: SEND_ALL_GAS,
+                    callback: onStorageReadDeployCert
+                }(DEPLOY_NIC_VALUE);
+            }
+            _;
+        } else if (functionId == tvm.functionId(DomainAuction.isAbleToParticipate)){
+            reserve(0);
+            (uint32 _, uint128 requestHash) = slice.decodeFunctionParams(DomainAuction.isAbleToParticipate);
+            address pStorage = calcParticipantStorageAddress(requestHash);
+            ParticipantStorage(pStorage).prune{
+                value: 0,
+                flag: SEND_ALL_GAS,
+                callback: onStoragePruneDeployAuction
+            }();
+            _;
+        }
+    }
+
     /* work with subdomain callbacks*/
 
     function onUpdateChildCert(string domain, address sender, bool successful) public view {
         checkIsMessageFromSubdomain(domain);
+        reserve(0);
         uint128 requestHash = calcRequestHash(ParticipantStoragePK(sender, domain));
         address pStorage = calcParticipantStorageAddress(requestHash);
         if (successful) {
             ParticipantStorage(pStorage).prune{
-                value: DEFAULT_MESSAGE_VALUE,
+                value: 0,
+                flag: SEND_ALL_GAS,
                 callback: onStoragePrunePayToOwner
             }();
-        }
-        else {
+        } else {
             ParticipantStorage(pStorage).prune{
-                value: DEFAULT_MESSAGE_VALUE,
+                value: 0,
+                flag: SEND_ALL_GAS,
                 callback: onStoragePruneReturnFunds
             }();
         }
@@ -206,126 +281,172 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
     function isAbleToRegisterCallback(bool isAvailable, uint128 requestHash, string domainName) public view {
         checkIsMessageFromSubdomain(domainName);
+        reserve(0);
+        address pStorage = calcParticipantStorageAddress(requestHash);
         if (!isAvailable) {
-            address pStorage = calcParticipantStorageAddress(requestHash);
-            ParticipantStorage(pStorage).prune{value: DEFAULT_MESSAGE_VALUE, callback: onStoragePruneReturnFunds}();
+            ParticipantStorage(pStorage).prune{value: 0, flag: SEND_ALL_GAS, callback: onStoragePruneReturnFunds}();
+            return;
         }
-        // TODO update
-    }
-
-    onBounce(TvmSlice slice) external view {
-        uint32 functionId = slice.decode(uint32);
-        if (functionId == tvm.functionId(isAbleToRegister)) {
-            (uint32 _, uint128 requestHash) = slice.decodeFunctionParams(isAbleToRegister);
-            address pStorage = calcParticipantStorageAddress(requestHash);
-            ParticipantStorage(pStorage).getDataAndWithdraw{
-                value: DEFAULT_MESSAGE_VALUE,
-                callback: onStorageReadResponse
-            }(DEPLOY_NIC_VALUE + DEFAULT_MESSAGE_VALUE);
-        } else if (functionId == tvm.functionId(updateCertificate)){
-            // TODO return funds
+        if (isAuction()) {
+            DomainAuction(getResolveAuction(domainName)).isAbleToParticipate{
+                value: 0,
+                flag: SEND_ALL_GAS,
+                callback: onCheckAuctionCallback
+            }(requestHash);
+            return;
+        }
+        if (isInstantBuy()) {
+            ParticipantStorage(pStorage).getData{value: 0, flag: SEND_ALL_GAS, callback: onStorageReadUpdateCert}();
+            return;
         }
     }
 
+    /* work with auction callbacks*/
 
-    /* storage read callbacks */
+    function onCheckAuctionCallback(uint128 requestHash, string domainName) public view {
+        require(msg.sender == getResolveAuction(domainName), DeNsErrors.IS_NOT_AUCTION);
+        address pStorage = calcParticipantStorageAddress(requestHash);
+        ParticipantStorage(pStorage).prune{
+            value: 0,
+            flag: SEND_ALL_GAS,
+            callback: onStoragePruneReturnFunds
+        }();
+    }
 
-    function onStoragePrunePayToOwner(ParticipantStoragePK storageDataPK) public view {
-        uint128 requestHash = calcRequestHash(storageDataPK);
-        checkIsMessageFromStorage(requestHash);
-        tvm.rawReserve(_startBalance, 2);
+    function onAuctionCompletionCallback(string domainName, address newOwner, uint32 expiresAt) public override {
+        require(msg.sender == getResolveAuction(domainName), DeNsErrors.IS_NOT_AUCTION);
+        reserve(0);
+        if (newOwner != address(0)) {
+            deployCertificate(newOwner, domainName, _registrationType, expiresAt, DEPLOY_NIC_VALUE);
+        }
         _owner.transfer({value: 0, flag: SEND_ALL_GAS, bounce: false});
     }
 
-    function onStoragePruneReturnFunds(ParticipantStoragePK storageDataPK) public view {
-        uint128 requestHash = calcRequestHash(storageDataPK);
-        checkIsMessageFromStorage(requestHash);
-        tvm.rawReserve(math.max(_startBalance, address(this).balance - msg.value), 2);
-        storageDataPK.account.transfer({value: 0, flag: SEND_ALL_GAS, bounce: false});
-    }
+    /* storage read callbacks */
 
-    function onStorageReadResponse(ParticipantStorageData storageData) public {
+    function onStorageReadCheckAuction(ParticipantStorageData storageData) public view {
         uint128 requestHash = calcRequestHash(storageData.pk);
         checkIsMessageFromStorage(requestHash);
-        address cert = deployCertificate(storageData.pk.domainName, RegistrationTypes.Instant, 0, DEPLOY_NIC_VALUE);
+        reserve(0);
+        DomainAuction(getResolveAuction(storageData.pk.domainName)).isAbleToParticipate{
+            value: 0,
+            flag: SEND_ALL_GAS,
+            callback: onCheckAuctionCallback
+        }(requestHash);
+    }
+
+    function onStoragePruneDeployAuction(ParticipantStorageData storageData) public {
+        uint128 requestHash = calcRequestHash(storageData.pk);
+        checkIsMessageFromStorage(requestHash);
+        reserve(0);
+        string name = storageData.pk.domainName;
+        TvmCell auctionStateInit = buildAuctionStateInit(storageData.pk.domainName);
+        address auction = new DomainAuction{
+            stateInit: auctionStateInit,
+            value: DEPLOY_AUCTION_VALUE
+        }(storageData.requestedExpiresAt, calcAuctionDuration(storageData.durationInYears), _auctionDeposit);
+        emit AuctionDeployed(name);
+        DomainAuction(auction).setInitialBid{value: 0, flag: SEND_ALL_GAS}(storageData.pk.account, storageData.bidHash);
+    }
+
+    function onStoragePrunePayToOwner(ParticipantStorageData storageData) public view {
+        uint128 requestHash = calcRequestHash(storageData.pk);
+        checkIsMessageFromStorage(requestHash);
+        reserve(0);
+        _owner.transfer({value: 0, flag: SEND_ALL_GAS, bounce: false});
+    }
+
+    function onStoragePruneReturnFunds(ParticipantStorageData storageData) public view {
+        uint128 requestHash = calcRequestHash(storageData.pk);
+        checkIsMessageFromStorage(requestHash);
+        reserve(0);
+        storageData.pk.account.transfer({value: 0, flag: SEND_ALL_GAS, bounce: false});
+    }
+
+    function onStorageReadDeployCert(ParticipantStorageData storageData) public {
+        setupSubdomainCert(storageData, true);
+    }
+
+    function onStorageReadUpdateCert(ParticipantStorageData storageData) public {
+        setupSubdomainCert(storageData, false);
+    }
+
+    function setupSubdomainCert(ParticipantStorageData storageData, bool deploy) private {
+        uint128 requestHash = calcRequestHash(storageData.pk);
+        checkIsMessageFromStorage(requestHash);
+        reserve(0);
+        address cert;
+        string name = storageData.pk.domainName;
+        if (deploy) {
+            cert = deployCertificate(address(0), name, _registrationType, 0, DEPLOY_NIC_VALUE);
+        } else {
+            cert = getResolve(name);
+        }
         NameIdentityCertificate(cert).updateCertificate{
-            value: DEFAULT_MESSAGE_VALUE ,
+            value: 0,
+            flag: SEND_ALL_GAS,
             callback: onUpdateChildCert
         }(storageData.pk.account, storageData.requestedExpiresAt);
     }
 
-    function isAbleToRegister(uint128 requestHash) public view override returns (bool, uint128, string) {
-        tvm.rawReserve(address(this).balance - msg.value, 2);
-        // todo is able?
-        return{value: 0, flag: SEND_ALL_GAS} (false, requestHash, _name);
-    }
-
     /*
-    *  Parent functions
-    */
+     *  Parent functions
+     */
 
     function updateCertificate(
         address newOwner,
         uint32 newExpiresAt
     ) public override onlyParent returns (string, address, bool) {
-        // TODO add checks
-        if (false){
-//        require(_expiresAt == 0, 111);
-            return{value: 0, flag: SEND_ALL_GAS} (_name, newOwner, false);
+        reserve(0);
+        bool successful = false;
+        if (isExpired() || _expiresAt == 0){
+            _setOwner(newOwner);
+            _setExpiresAt(newExpiresAt);
+            emit UpdateCertificate(newOwner, newExpiresAt);
+            successful = true;
         }
-        tvm.rawReserve(address(this).balance - msg.value, 2);
-        address previousOwner = _owner;
-        uint32 previousExpiresAt = _expiresAt;
-        _setOwner(newOwner);
-        _setExpiresAt(newExpiresAt);
-        emit UpdateCertificate(previousOwner, newOwner, previousExpiresAt, newExpiresAt);
-        return{value: 0, flag: SEND_ALL_GAS} (_name, newOwner, true);
+        return{value: 0, flag: SEND_ALL_GAS} (_name, newOwner, successful);
+
     }
 
     /*
-    *  Owner functions
-    */
+     *  Owner functions
+     */
 
-    // TODO add checks for expiration
-
-    function setOwner(address newOwner) public override onlyOwner {
-        address previousOwner = newOwner;
+    function setOwner(address newOwner) public override update onlyOwner {
         _setOwner(newOwner);
-        emit UpdateOwner(previousOwner, newOwner);
+        emit UpdateOwner(newOwner);
     }
 
-    function setRegistrationType(RegistrationTypes newRegistrationType) public override onlyOwner {
+    function setRegistrationType(RegistrationTypes newRegistrationType) public override update onlyOwner {
         require(RegistrationTypes.OwnerOnly >= newRegistrationType, DeNsErrors.INVALID_REGISTRATION_TYPE);
-        RegistrationTypes previousRegistrationType = _registrationType;
         _registrationType = newRegistrationType;
-        emit UpdateRegistrationType(previousRegistrationType, newRegistrationType);
+        emit UpdateRegistrationType(newRegistrationType);
     }
 
-    function setInstantBuyPrice(uint128 instantBuyPrice) public onlyOwner returns (uint128) {
+    function setInstantBuyPrice(uint128 instantBuyPrice) public onlyOwner update returns (uint128) {
         _instantBuyPrice = instantBuyPrice;
     }
 
-    function setInstantBuyMaxSecDuration(uint32 instantBuyMaxSecDuration) public onlyOwner returns (uint32) {
+    function setInstantBuyMaxSecDuration(uint32 instantBuyMaxSecDuration) public update onlyOwner returns (uint32) {
         _instantBuyMaxSecDuration = instantBuyMaxSecDuration;
     }
 
-    function setAddress(address newAddress) public override onlyOwner {
-        address previousAddress = _records.A;
+    function setAddress(address newAddress) public override update onlyOwner {
         _records.A = newAddress;
-        emit UpdateRecordAddress(previousAddress, newAddress);
+        emit UpdateRecordAddress(newAddress);
     }
 
-    function setAdnlAddress(string newAdnlAddress) public override onlyOwner {
-        string previousAddress = _records.ADNL;
+    function setAdnlAddress(string newAdnlAddress) public override update onlyOwner {
         _records.ADNL = newAdnlAddress;
-        emit UpdateADNLAddress(previousAddress, newAdnlAddress);
+        emit UpdateADNLAddress(newAdnlAddress);
     }
 
-    function addTextRecord(string newTextRecord) public override onlyOwner {
+    function addTextRecord(string newTextRecord) public override update onlyOwner {
         return _records.TXT.push(newTextRecord);
     }
 
-    function removeTextRecordByIndex(uint index) public override onlyOwner {
+    function removeTextRecordByIndex(uint index) public override update onlyOwner {
         delete _records.TXT[index];
     }
 
@@ -340,6 +461,43 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
     /*
      *  Private functions
      */
+
+    function reserve(uint128 additional) private view {
+        tvm.rawReserve(address(this).balance - msg.value + additional, 2);
+    }
+
+    function isExpired() private view returns (bool) {
+        return _expiresAt <= now;
+    }
+
+    function isInstantBuy() private view returns (bool) {
+        return _registrationType == RegistrationTypes.Instant;
+    }
+
+    function isAuction() private view returns (bool) {
+        return _registrationType == RegistrationTypes.Auction;
+    }
+
+    function calcAddress(TvmCell state) private pure returns (address) {
+        return address.makeAddrStd(0, tvm.hash(state));
+    }
+
+    /*  Auction helper functions */
+
+    function calcAuctionDuration(uint8 durationInYears) private pure returns (uint32) {
+        return durationInYears >= 4 ? 28 days : durationInYears * 7 days;
+    }
+
+    function buildAuctionStateInit(string name) private view returns (TvmCell) {
+        return tvm.buildStateInit({
+            contr: DomainAuction,
+            varInit: {
+                addressNIC: address(this),
+                relativeDomainName: name
+            },
+            code: _auctionCode
+        });
+    }
 
     /*  Storage helper functions */
 
@@ -356,7 +514,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
 
     function calcParticipantStorageAddress(uint128 requestHash) private view returns (address) {
         TvmCell storageState = buildParticipantStorageStateInit(address(this), requestHash);
-        return address.makeAddrStd(0, tvm.hash(storageState));
+        return calcAddress(storageState);
     }
 
     function buildParticipantStorageStateInit(address root, uint128 requestHash) private view returns (TvmCell) {
@@ -393,12 +551,9 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         }
     }
 
-
-
-    // TODO: Move to Base contract after bug with static vars will be fixed in SOLC
     function getResolve(string domainName) public view override returns (address certificate) {
         TvmCell state = buildNicStateInit(domainName);
-        certificate = address.makeAddrStd(0, tvm.hash(state));
+        certificate = calcAddress(state);
     }
 
     function getParent() public view override returns (address) {
@@ -414,22 +569,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
     }
 
     function buildNicStateInit(string domainName) internal view returns (TvmCell) {
-        string childContractPath = _path;
-        if (_name.byteLength() > 0) {
-            if (_path.byteLength() > 0) {
-                childContractPath.append(string("/"));
-            }
-            childContractPath.append(_name);
-        }
-        return tvm.buildStateInit({
-            contr: CertificateDeployable,
-            varInit: {
-                _parent: address(this),
-                _path: childContractPath,
-                _name: domainName
-            },
-            code: _certificateCode
-        });
+        return _buildNicStateInit(domainName, _path, _name);
     }
 
     function deployCertificate(
@@ -440,6 +580,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         uint128 value
     ) internal returns (address) {
         TvmCell state = buildNicStateInit(domainName);
+        emit CertificateDeployed(domainName);
         return new CertificateDeployable{
             stateInit: state,
             value: value

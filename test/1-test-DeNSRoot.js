@@ -30,7 +30,7 @@ describe('Test DeNS Root', async function () {
         it('Check SMV(parent) address', async function () {
             expect(await DeNSRootContract.runLocal('getParent'))
                 .to
-                .equal(process.env.SMV_ADDRESS, 'Wrong SMV address');
+                .equal(process.env.ROOT_OWNER_ADDRESS, 'Wrong Root owner');
         });
         it('Check DeNS Root name', async function () {
             expect(await DeNSRootContract.runLocal('getName'))

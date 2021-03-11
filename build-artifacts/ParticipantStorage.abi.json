@@ -5,7 +5,7 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"}],"name":"data","type":"tuple"}
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"data","type":"tuple"}
 			],
 			"outputs": [
 			]
@@ -15,7 +15,7 @@
 			"inputs": [
 			],
 			"outputs": [
-				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"}],"name":"value0","type":"tuple"}
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"value0","type":"tuple"}
 			]
 		},
 		{
@@ -24,7 +24,7 @@
 				{"name":"value","type":"uint128"}
 			],
 			"outputs": [
-				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"}],"name":"value0","type":"tuple"}
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"value0","type":"tuple"}
 			]
 		},
 		{
@@ -32,7 +32,7 @@
 			"inputs": [
 			],
 			"outputs": [
-				{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"value0","type":"tuple"}
+				{"components":[{"components":[{"name":"account","type":"address"},{"name":"domainName","type":"bytes"}],"name":"pk","type":"tuple"},{"name":"requestedExpiresAt","type":"uint32"},{"name":"durationInYears","type":"uint8"},{"name":"bidHash","type":"uint256"}],"name":"value0","type":"tuple"}
 			]
 		}
 	],
