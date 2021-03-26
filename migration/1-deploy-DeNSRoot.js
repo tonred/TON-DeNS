@@ -23,13 +23,7 @@ async function deployDeNSRoot(tonWrapper, migration) {
     }));
     await migration.deploy({
         contract: DeNSRootContract,
-        constructorParams: {
-            certificateCode: DeNSCertContract.code,
-            auctionCode: DeNSAuctionContract.code,
-            participantStorageCode: ParticipantStorageContract.code,
-            reservedDomains: reservedDomains,
-            reservedDomainInitialValue: TONTestingSuite.utils.convertCrystal('2', 'nano')
-        },
+        constructorParams: {reservedDomains: reservedDomains},
         initParams: {
             _parent: process.env.ROOT_OWNER_ADDRESS,
             _path: '',
@@ -37,6 +31,19 @@ async function deployDeNSRoot(tonWrapper, migration) {
         },
         initialBalance: TONTestingSuite.utils.convertCrystal('10', 'nano'),
         alias: process.env.ALIAS,
+    });
+
+    async function init(name, value) {
+        console.log('DeNSRootContract initialization: ' + name);
+        await DeNSRootContract.run(name, value);
+    }
+    await init('setCertificateCode', {certificateCode: DeNSCertContract.code});
+    await init('setAuctionCode', {auctionCode: DeNSAuctionContract.code});
+    await init('setParticipantStorageCode', {participantStorageCode: ParticipantStorageContract.code});
+    await init('setProposalCode', {proposalCode: DeNsProposalContract.code});
+
+    await init('initReservedDomains', {
+        reservedDomainInitialValue: TONTestingSuite.utils.convertCrystal('2', 'nano')
     });
 }
 

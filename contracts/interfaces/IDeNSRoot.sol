@@ -15,7 +15,15 @@ interface IDeNSRoot {
         VoteCountModel model
     ) external;
 
+    function setCertificateCode(TvmCell certificateCode) external;
+
+    function setAuctionCode(TvmCell auctionCode) external;
+
+    function setParticipantStorageCode(TvmCell participantStorageCode) external;
+
     function setProposalCode(TvmCell proposalCode) external;
+
+    function initReservedDomains(uint128 reservedDomainInitialValue) external;
 
     function getResolve(string domainName) external view returns (address);
 

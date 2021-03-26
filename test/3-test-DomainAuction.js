@@ -36,7 +36,7 @@ async function resolveAuction(cert, name) {
 describe('Test Domain Auction', async function () {
     this.timeout(12000000);
     const name = 'test';
-    const value = '105';
+    const value = '11';
 
     before(async function () {
         await tonWrapper.setup();
@@ -58,7 +58,7 @@ describe('Test Domain Auction', async function () {
         before(async function () {
             DomainAuction.address = await resolveAuction(rootCert, name);
             logger.log(`Domain Auction contract address: ${DomainAuction.address}`);
-            await buyDomain(rootCert, name, 10, 111, value);
+            await buyDomain(rootCert, name, 10, 1, value);
 
             domainExpiresAt = await DomainAuction.runLocal('getDomainExpiresAt');
             openTime = await DomainAuction.runLocal('getOpenTime');
@@ -91,7 +91,7 @@ describe('Test Domain Auction', async function () {
 
         it('Check make bid', async function () {
             let salt = randomInt(0, Number.MAX_SAFE_INTEGER);
-            let bidValue = 1111;
+            let bidValue = 2;
             let bidHash = BigNumber(await DomainAuction.runLocal('calcHash', {
                 bidValue: bidValue, salt: salt,
             })).toFixed();

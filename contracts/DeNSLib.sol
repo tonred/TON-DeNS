@@ -47,6 +47,10 @@ library DeNsErrors {
 
     uint16 constant INVALID_DOMAIN_NAME = 110;
 
+    uint16 constant RESERVED_DOMAINS_ALREADY_INITIALIZED = 111;
+    uint16 constant IMAGES_NOT_INITIALIZED = 112;
+    uint16 constant NOT_ENOUGH_BALANCE_FOR_INITIALIZATION = 113;
+
     uint16 constant NOT_ALLOWED_REGISTRATION_TYPE = 120;
     uint16 constant INVALID_REGISTRATION_TYPE = 121;
 

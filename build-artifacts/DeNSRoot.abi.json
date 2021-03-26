@@ -5,11 +5,31 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"certificateCode","type":"cell"},
-				{"name":"auctionCode","type":"cell"},
-				{"name":"participantStorageCode","type":"cell"},
-				{"components":[{"name":"owner","type":"address"},{"name":"domainName","type":"bytes"},{"name":"registrationType","type":"uint8"}],"name":"reservedDomains","type":"tuple[]"},
-				{"name":"reservedDomainInitialValue","type":"uint128"}
+				{"components":[{"name":"owner","type":"address"},{"name":"domainName","type":"bytes"},{"name":"registrationType","type":"uint8"}],"name":"reservedDomains","type":"tuple[]"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setCertificateCode",
+			"inputs": [
+				{"name":"certificateCode","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setAuctionCode",
+			"inputs": [
+				{"name":"auctionCode","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "setParticipantStorageCode",
+			"inputs": [
+				{"name":"participantStorageCode","type":"cell"}
 			],
 			"outputs": [
 			]
@@ -18,6 +38,14 @@
 			"name": "setProposalCode",
 			"inputs": [
 				{"name":"proposalCode","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "initReservedDomains",
+			"inputs": [
+				{"name":"reservedDomainInitialValue","type":"uint128"}
 			],
 			"outputs": [
 			]
@@ -106,6 +134,14 @@
 			],
 			"outputs": [
 				{"name":"_proposalCode","type":"cell"}
+			]
+		},
+		{
+			"name": "_reservedDomains",
+			"inputs": [
+			],
+			"outputs": [
+				{"components":[{"name":"owner","type":"address"},{"name":"domainName","type":"bytes"},{"name":"registrationType","type":"uint8"}],"name":"_reservedDomains","type":"tuple[]"}
 			]
 		}
 	],

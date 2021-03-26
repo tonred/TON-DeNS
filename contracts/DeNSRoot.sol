@@ -16,6 +16,9 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
     string static _name;
 
     TvmCell public _proposalCode;
+    ReservedDomain[] public _reservedDomains;
+
+    bool _isReservedDomainsInitialized;
 
     struct ReservedDomain {
         address owner;
@@ -23,39 +26,77 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         RegistrationTypes registrationType;
     }
 
+    /*
+     * modifiers
+     */
+    
     modifier onlyParent {
         require(msg.sender == _parent, DeNsErrors.IS_NOT_OWNER);
         _;
     }
 
-    constructor(
-        TvmCell certificateCode,
-        TvmCell auctionCode,
-        TvmCell participantStorageCode,
-        ReservedDomain[] reservedDomains,
-        uint128 reservedDomainInitialValue
-    ) public {
+    modifier onlyDeployerAndAccept {
         require(msg.pubkey() == tvm.pubkey(), 100);
         tvm.accept();
+        _;
+    }
 
+    modifier isNotInitialized {
+        require(!_isReservedDomainsInitialized, DeNsErrors.RESERVED_DOMAINS_ALREADY_INITIALIZED);
+        _;
+    }
+
+    constructor(ReservedDomain[] reservedDomains) public onlyDeployerAndAccept {
+        _reservedDomains = reservedDomains;
+        _isReservedDomainsInitialized = false;
+    }
+
+    function setCertificateCode(
+        TvmCell certificateCode
+    ) public override onlyDeployerAndAccept isNotInitialized {
         _certificateCode = certificateCode;
-        _auctionCode = auctionCode;
-        _participantStorageCode = participantStorageCode;
+    }
 
-        for (uint i = 0; i < reservedDomains.length; i++) {
+    function setAuctionCode(
+        TvmCell auctionCode
+    ) public override onlyDeployerAndAccept isNotInitialized {
+        _auctionCode = auctionCode;
+    }
+
+    function setParticipantStorageCode(
+        TvmCell participantStorageCode
+    ) public override onlyDeployerAndAccept isNotInitialized {
+        _participantStorageCode = participantStorageCode;
+    }
+
+    function setProposalCode(
+        TvmCell proposalCode
+    ) public override onlyDeployerAndAccept isNotInitialized {
+        _proposalCode = proposalCode;
+    }
+
+    function initReservedDomains(
+        uint128 reservedDomainInitialValue
+    ) public override onlyDeployerAndAccept isNotInitialized {
+        require(
+            isNotEpmty(_certificateCode) && isNotEpmty(_auctionCode) && isNotEpmty(_participantStorageCode),
+            DeNsErrors.IMAGES_NOT_INITIALIZED
+        );
+        require(
+            address(this).balance + 1 ton > _reservedDomains.length * reservedDomainInitialValue,
+            DeNsErrors.NOT_ENOUGH_BALANCE_FOR_INITIALIZATION
+        );
+        _isReservedDomainsInitialized = true;
+        for (uint i = 0; i < _reservedDomains.length; i++) {
             deployCertificate(
-                reservedDomains[i].owner,
-                reservedDomains[i].domainName,
-                reservedDomains[i].registrationType,
+                _reservedDomains[i].owner,
+                _reservedDomains[i].domainName,
+                _reservedDomains[i].registrationType,
                 0xFFFFFFFF,
                 reservedDomainInitialValue,
                 0
             );
         }
-    }
-
-    function setProposalCode(TvmCell proposalCode) public override onlyParent {
-        _proposalCode = proposalCode;
     }
 
     function createDomainProposal(
@@ -144,6 +185,10 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
             value: value,
             flag: flag
         }(owner, expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+    }
+
+    function isNotEpmty(TvmCell cell) private pure returns (bool) {
+        return cell.depth() > 0;
     }
 
 }

@@ -17,7 +17,7 @@ async function deployDeNSDebot(tonWrapper, migration) {
             targetAddress: DeNSRootContract.address,
         },
         initParams: {},
-        initialBalance: TONTestingSuite.utils.convertCrystal('11', 'nano'),
+        initialBalance: TONTestingSuite.utils.convertCrystal('1', 'nano'),
         alias: 'DeBot' + process.env.ALIAS,
     });
     return DeNSDebotContract
