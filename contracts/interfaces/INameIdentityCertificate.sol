@@ -58,7 +58,9 @@ interface INameIdentityCertificate {
 
     function setInstantBuyMaxSecDuration(uint32 instantBuyMaxSecDuration) external;
 
-    function setAuctionDeposit(uint32 auctionDeposit) external;
+    function setAuctionFee(uint128 auctionFee) external;
+
+    function setAuctionDeposit(uint128 auctionDeposit) external;
 
     function setAddress(address newAddress) external;
 

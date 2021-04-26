@@ -16,6 +16,9 @@ module.exports = {
     loadDeNSAuctionContract: async function (tw) {
         return await loadContract(tw, process.env.DNS_AUCTION_CONTRACT);
     },
+    loadDeNSBidContract: async function (tw) {
+        return await loadContract(tw, process.env.DNS_BID_CONTRACT);
+    },
     loadDeNSDebotContract: async function (tw) {
         return await loadContract(tw, process.env.DNS_DEBOT_CONTRACT);
     },

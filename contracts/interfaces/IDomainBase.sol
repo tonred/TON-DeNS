@@ -6,4 +6,6 @@ interface IDomainBase {
 
     function getAuctionCode() external view returns (TvmCell);
 
+    function getBidCode() external view returns (TvmCell);
+
 }

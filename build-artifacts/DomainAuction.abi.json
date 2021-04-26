@@ -5,9 +5,11 @@
 		{
 			"name": "constructor",
 			"inputs": [
-				{"name":"thisDomainExpiresAt","type":"uint32"},
-				{"name":"auctionDuration","type":"uint32"},
-				{"name":"auctionDeposit_","type":"uint128"}
+				{"name":"domainExpiresAt","type":"uint32"},
+				{"name":"duration","type":"uint32"},
+				{"name":"fee","type":"uint128"},
+				{"name":"deposit","type":"uint128"},
+				{"name":"bidCode","type":"cell"}
 			],
 			"outputs": [
 			]
@@ -69,26 +71,25 @@
 			]
 		},
 		{
-			"name": "getCurrentBidsCount",
+			"name": "getBidsCount",
 			"inputs": [
 			],
 			"outputs": [
-				{"name":"value0","type":"uint64"}
+				{"name":"value0","type":"uint128"}
 			]
 		},
 		{
-			"name": "getBid",
+			"name": "getConfirmedBidsCount",
 			"inputs": [
-				{"name":"bidder","type":"address"}
 			],
 			"outputs": [
-				{"name":"value0","type":"uint256"}
+				{"name":"value0","type":"uint128"}
 			]
 		},
 		{
 			"name": "makeBid",
 			"inputs": [
-				{"name":"bidHash","type":"uint256"}
+				{"name":"hash","type":"uint256"}
 			],
 			"outputs": [
 			]
@@ -96,6 +97,16 @@
 		{
 			"name": "removeBid",
 			"inputs": [
+				{"name":"hash","type":"uint256"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "removeBidCallback",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"hash","type":"uint256"}
 			],
 			"outputs": [
 			]
@@ -103,16 +114,34 @@
 		{
 			"name": "confirmBid",
 			"inputs": [
-				{"name":"bidValue","type":"uint128"},
+				{"name":"value","type":"uint128"},
 				{"name":"salt","type":"uint256"}
 			],
 			"outputs": [
 			]
 		},
 		{
-			"name": "calcHash",
+			"name": "confirmBidCallback",
 			"inputs": [
-				{"name":"bidValue","type":"uint128"},
+				{"name":"owner","type":"address"},
+				{"name":"hash","type":"uint256"},
+				{"name":"value","type":"uint128"},
+				{"name":"msgValue","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "update",
+			"inputs": [
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "calcBidHash",
+			"inputs": [
+				{"name":"value","type":"uint128"},
 				{"name":"salt","type":"uint256"}
 			],
 			"outputs": [
@@ -120,17 +149,10 @@
 			]
 		},
 		{
-			"name": "finish",
-			"inputs": [
-			],
-			"outputs": [
-			]
-		},
-		{
 			"name": "setInitialBid",
 			"inputs": [
 				{"name":"sender","type":"address"},
-				{"name":"bidHash","type":"uint256"}
+				{"name":"hash","type":"uint256"}
 			],
 			"outputs": [
 			]
@@ -147,8 +169,8 @@
 		}
 	],
 	"data": [
-		{"key":1,"name":"addressNIC","type":"address"},
-		{"key":2,"name":"relativeDomainName","type":"bytes"}
+		{"key":1,"name":"_addressNIC","type":"address"},
+		{"key":2,"name":"_relativeDomainName","type":"bytes"}
 	],
 	"events": [
 		{
@@ -156,11 +178,11 @@
 			"inputs": [
 				{"name":"auctionStartTime","type":"uint32"},
 				{"name":"auctionFinishTime","type":"uint32"},
-				{"name":"domainExpiresAt","type":"uint32"},
-				{"name":"bidsHashesCount","type":"uint64"},
-				{"name":"bidsCount","type":"uint64"},
+				{"name":"bidsHashesCount","type":"uint128"},
+				{"name":"bidsCount","type":"uint128"},
 				{"name":"highestBid","type":"uint128"},
-				{"name":"sellBid","type":"uint128"}
+				{"name":"winner","type":"address"},
+				{"name":"cost","type":"uint128"}
 			],
 			"outputs": [
 			]

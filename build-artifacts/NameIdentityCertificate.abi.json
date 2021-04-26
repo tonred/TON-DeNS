@@ -10,6 +10,7 @@
 				{"name":"registrationType","type":"uint8"},
 				{"name":"certificateCode","type":"cell"},
 				{"name":"auctionCode","type":"cell"},
+				{"name":"bidCode","type":"cell"},
 				{"name":"participantStorageCode","type":"cell"}
 			],
 			"outputs": [
@@ -275,9 +276,17 @@
 			]
 		},
 		{
+			"name": "setAuctionFee",
+			"inputs": [
+				{"name":"auctionFee","type":"uint128"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "setAuctionDeposit",
 			"inputs": [
-				{"name":"auctionDeposit","type":"uint32"}
+				{"name":"auctionDeposit","type":"uint128"}
 			],
 			"outputs": [
 			]
@@ -357,6 +366,14 @@
 		},
 		{
 			"name": "getAuctionCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"cell"}
+			]
+		},
+		{
+			"name": "getBidCode",
 			"inputs": [
 			],
 			"outputs": [

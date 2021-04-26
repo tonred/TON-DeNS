@@ -14,6 +14,7 @@ help:
 	@echo "build-cert - Compile DeNS NIC(Name Identity Certificate)"
 	@echo "build-debot - Compile DeNS DeBot"
 	@echo "build-auction - Compile DeNS Auction"
+	@echo "build-bid - Compile DeNS Bid"
 	@echo "build-participant-storage - Compile DeNS Participant storage"
 	@echo "build-proposal - Compile DeNS Participant storage"
 	@echo "build-test - Compile DeNS Tests contracts"
@@ -46,7 +47,7 @@ deploy-tests:
 	@echo "Deploying Tests contract"
 	node migration/4-deploy-TestContracts.js
 
-build: build-root build-cert build-debot build-auction build-test build-participant-storage build-proposal
+build: build-root build-cert build-debot build-auction build-bid build-test build-participant-storage build-proposal
 	@echo "Compiling all contracts"
 
 build-root:
@@ -64,6 +65,10 @@ build-debot:
 build-auction:
 	@echo "Compiling DeNS Auction"
 	$(call compile_all,$(CONTRACTS_PATH),$(DNS_AUCTION_CONTRACT))
+
+build-bid:
+	@echo "Compiling DeNS Bid"
+	$(call compile_all,$(CONTRACTS_PATH),$(DNS_BID_CONTRACT))
 
 build-participant-storage:
 	@echo "Compiling DeNS Participant storage"

@@ -10,7 +10,7 @@ import "ParticipantStorage.sol";
 import "DomainAuction.sol";
 
 
-contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
+contract NameIdentityCertificate is DomainBase, INameIdentityCertificate {
     uint32 constant REGISTRATION_PERIOD = 28 days;
 
     uint128 constant DEFAULT_MESSAGE_VALUE = 0.5 ton;
@@ -29,6 +29,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
     RegistrationTypes _registrationType;
     Records _records;
 
+    uint128 _auctionFee = 1 ton;
     uint128 _auctionDeposit = 10 ton;
     uint128 _instantBuyPrice = 10 ton;
     uint32 _instantBuyMaxSecDuration = 4 weeks;
@@ -78,11 +79,13 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         RegistrationTypes registrationType,
         TvmCell certificateCode,
         TvmCell auctionCode,
+        TvmCell bidCode,
         TvmCell participantStorageCode
     ) public onlyParent{
 
         _certificateCode = certificateCode;
         _auctionCode = auctionCode;
+        _bidCode = bidCode;
         _participantStorageCode = participantStorageCode;
 
         _owner = owner;
@@ -346,7 +349,7 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         address auction = new DomainAuction{
             stateInit: auctionStateInit,
             value: DEPLOY_AUCTION_VALUE
-        }(storageData.requestedExpiresAt, calcAuctionDuration(storageData.durationInYears), _auctionDeposit);
+        }(storageData.requestedExpiresAt, calcAuctionDuration(storageData.durationInYears), _auctionFee, _auctionDeposit, _bidCode);
         emit AuctionDeployed(name);
         DomainAuction(auction).setInitialBid{value: 0, flag: SEND_ALL_GAS}(storageData.pk.account, storageData.bidHash);
     }
@@ -434,7 +437,11 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         _instantBuyMaxSecDuration = instantBuyMaxSecDuration;
     }
 
-    function setAuctionDeposit(uint32 auctionDeposit) public override  update onlyOwner{
+    function setAuctionFee(uint128 auctionFee) public override update onlyOwner {
+        _auctionFee = auctionFee;
+    }
+
+    function setAuctionDeposit(uint128 auctionDeposit) public override update onlyOwner {
         _auctionDeposit = auctionDeposit;
     }
 
@@ -498,8 +505,8 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         return tvm.buildStateInit({
             contr: DomainAuction,
             varInit: {
-                addressNIC: address(this),
-                relativeDomainName: name
+                _addressNIC: address(this),
+                _relativeDomainName: name
             },
             code: _auctionCode
         });
@@ -590,6 +597,6 @@ contract NameIdentityCertificate is DomainBase, INameIdentityCertificate{
         return new CertificateDeployable{
             stateInit: state,
             value: value
-        }(owner, expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+        }(owner, expiresAt, registrationType, _certificateCode, _auctionCode, _bidCode, _participantStorageCode);
     }
 }

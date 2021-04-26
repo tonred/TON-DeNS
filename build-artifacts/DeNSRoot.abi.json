@@ -27,6 +27,14 @@
 			]
 		},
 		{
+			"name": "setBidCode",
+			"inputs": [
+				{"name":"bidCode","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
 			"name": "setParticipantStorageCode",
 			"inputs": [
 				{"name":"participantStorageCode","type":"cell"}
@@ -122,6 +130,14 @@
 		},
 		{
 			"name": "getAuctionCode",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"cell"}
+			]
+		},
+		{
+			"name": "getBidCode",
 			"inputs": [
 			],
 			"outputs": [

@@ -19,18 +19,20 @@ interface IDomainAuction {
 
     function getCloseTime() external view returns (AuctionPhaseTime);
 
-    function getCurrentBidsCount() external view returns (uint64);
+    function getBidsCount() external view returns (uint128);
 
-    function getBid(address bidder) external view returns (uint256);
+    function getConfirmedBidsCount() external view returns (uint128);
 
     /* Bids functions */
-    function makeBid(uint256 bidHash) external;
+    function makeBid(uint256 hash) external;
 
-    function removeBid() external;
+    function removeBid(uint256 hash) external view;
 
-    function confirmBid(uint128 bidValue, uint256 salt) external;
+    function confirmBid(uint128 value, uint256 salt) external view;
 
-    function calcHash(uint128 bidValue, uint256 salt) external pure returns (uint256);
+    function update() external;
+
+    function calcBidHash(uint128 value, uint256 salt) external pure returns (uint256);
 
     /* History functions ? */
 }

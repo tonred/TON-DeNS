@@ -9,6 +9,7 @@ abstract contract DomainBase is IDomainBase {
 
     TvmCell _certificateCode;
     TvmCell _auctionCode;
+    TvmCell _bidCode;
     TvmCell _participantStorageCode;
 
     /*
@@ -26,6 +27,10 @@ abstract contract DomainBase is IDomainBase {
 
     function getAuctionCode() view public override returns (TvmCell) {
         return _auctionCode;
+    }
+
+    function getBidCode() view public override returns (TvmCell) {
+        return _bidCode;
     }
 
     /*

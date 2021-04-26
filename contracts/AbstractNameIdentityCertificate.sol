@@ -12,6 +12,7 @@ contract CertificateDeployable{
         RegistrationTypes registrationType,
         TvmCell certificateCode,
         TvmCell auctionCode,
+        TvmCell bidCode,
         TvmCell participantStorageCode
     ) public  {}
 }

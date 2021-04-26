@@ -19,6 +19,8 @@ interface IDeNSRoot {
 
     function setAuctionCode(TvmCell auctionCode) external;
 
+    function setBidCode(TvmCell bidCode) external;
+
     function setParticipantStorageCode(TvmCell participantStorageCode) external;
 
     function setProposalCode(TvmCell proposalCode) external;

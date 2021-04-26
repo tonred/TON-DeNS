@@ -63,6 +63,12 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         _auctionCode = auctionCode;
     }
 
+    function setBidCode(
+        TvmCell bidCode
+    ) public override onlyDeployerAndAccept isNotInitialized {
+        _bidCode = bidCode;
+    }
+
     function setParticipantStorageCode(
         TvmCell participantStorageCode
     ) public override onlyDeployerAndAccept isNotInitialized {
@@ -79,7 +85,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
         uint128 reservedDomainInitialValue
     ) public override onlyDeployerAndAccept isNotInitialized {
         require(
-            isNotEpmty(_certificateCode) && isNotEpmty(_auctionCode) && isNotEpmty(_participantStorageCode),
+            isNotEpmty(_certificateCode) && isNotEpmty(_auctionCode) && isNotEpmty(_bidCode) && isNotEpmty(_participantStorageCode),
             DeNsErrors.IMAGES_NOT_INITIALIZED
         );
         require(
@@ -184,7 +190,7 @@ contract DeNSRoot is DomainBase, IDeNSRoot {
             stateInit: state,
             value: value,
             flag: flag
-        }(owner, expiresAt, registrationType, _certificateCode, _auctionCode, _participantStorageCode);
+        }(owner, expiresAt, registrationType, _certificateCode, _auctionCode, _bidCode, _participantStorageCode);
     }
 
     function isNotEpmty(TvmCell cell) private pure returns (bool) {

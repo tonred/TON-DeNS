@@ -5,6 +5,7 @@ const {
     loadDeNSRootContract,
     loadDeNSCertContract,
     loadDeNSAuctionContract,
+    loadDeNSBidContract,
     loadParticipantStorageContract,
     loadDeNsProposalContract
 } = require("./loadContracts");
@@ -14,6 +15,7 @@ async function deployDeNSRoot(tonWrapper, migration) {
     const DeNSRootContract = await loadDeNSRootContract(tonWrapper);
     const DeNSCertContract = await loadDeNSCertContract(tonWrapper);
     const DeNSAuctionContract = await loadDeNSAuctionContract(tonWrapper);
+    const DeNSBidContract = await loadDeNSBidContract(tonWrapper);
     const ParticipantStorageContract = await loadParticipantStorageContract(tonWrapper);
     const DeNsProposalContract = await loadDeNsProposalContract(tonWrapper);
     const reservedDomains = TONTestingSuite.utils.loadJSONFromFile(process.env.RESERVED_DOMAINS).map(i => ({
@@ -34,11 +36,17 @@ async function deployDeNSRoot(tonWrapper, migration) {
     });
 
     async function init(name, value) {
-        console.log('DeNSRootContract initialization: ' + name);
-        await DeNSRootContract.run(name, value);
+        try {
+            console.log('DeNSRootContract initialization: ' + name);
+            await DeNSRootContract.run(name, value);
+        } catch (e) {
+            console.log(e);
+        }
     }
     await init('setCertificateCode', {certificateCode: DeNSCertContract.code});
     await init('setAuctionCode', {auctionCode: DeNSAuctionContract.code});
+    console.log(DeNSBidContract.code);
+    await init('setBidCode', {bidCode: DeNSBidContract.code});
     await init('setParticipantStorageCode', {participantStorageCode: ParticipantStorageContract.code});
     await init('setProposalCode', {proposalCode: DeNsProposalContract.code});
 
